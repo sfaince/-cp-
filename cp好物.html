@@ -1,0 +1,3965 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>摊主经营好物</title>
+<style>
+  /* ========= 主题色变量 ========= */
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-bg: #eff6ff;
+    --primary-ring: rgba(37,99,235,0.12);
+  }
+  body.theme-red { --primary: #dc2626; --primary-dark: #b91c1c; --primary-bg: #fef2f2; --primary-ring: rgba(220,38,38,0.12); }
+  body.theme-yellow { --primary: #eab308; --primary-dark: #ca8a04; --primary-bg: #fefce8; --primary-ring: rgba(234,179,8,0.15); }
+  body.theme-green { --primary: #16a34a; --primary-dark: #15803d; --primary-bg: #f0fdf4; --primary-ring: rgba(22,163,74,0.12); }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f7fb;
+    color: #1e293b;
+    min-height: 100vh;
+    padding-bottom: 90px;
+    font-size: 15px;
+    transition: background 0.2s;
+  }
+
+  /* ========= 顶栏 ========= */
+  .topbar {
+    background-color: #0f172a;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: #fff;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    min-height: 60px;
+  }
+  .topbar.has-bg::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.25); z-index: 0; }
+  .topbar > * { position: relative; z-index: 1; }
+  .topbar h1 {
+    font-size: 1rem; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+    min-width: 0; flex: 1;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  .topbar h1 .brand-icon { font-size: 1.2rem; flex-shrink: 0; }
+  .topbar h1 .brand-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topbar .actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .icon-btn {
+    background: rgba(255,255,255,0.15);
+    color: #fff; border: none;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; cursor: pointer;
+    transition: 0.15s; padding: 0;
+    backdrop-filter: blur(4px);
+    overflow: hidden;
+  }
+  .icon-btn:active { background: rgba(255,255,255,0.3); transform: scale(0.95); }
+  .icon-inner { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+  .icon-inner img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
+
+  .tabs {
+    display: flex;
+    background: #fff;
+    border-bottom: 1px solid #e9edf2;
+    position: sticky;
+    top: 60px;
+    z-index: 99;
+  }
+  .tab {
+    flex: 1; padding: 13px 8px;
+    text-align: center;
+    font-size: 0.92rem; font-weight: 500;
+    color: #64748b; cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: 0.15s;
+  }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+  .page { display: none; padding: 12px; max-width: 900px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  button {
+    font-family: inherit;
+    border: none; cursor: pointer;
+    font-weight: 500;
+    transition: 0.15s;
+    border-radius: 40px;
+    padding: 10px 16px;
+    font-size: 0.88rem;
+    background: #0f172a;
+    color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  button:active { transform: scale(0.97); opacity: 0.9; }
+  button.secondary { background: #f1f5f9; color: #0f172a; border: 1px solid #e2e8f0; }
+  button.blue { background: var(--primary); }
+  button.blue:hover { background: var(--primary-dark); }
+  button.green { background: #10b981; }
+  button.red { background: #ef4444; }
+  button.small { padding: 6px 12px; font-size: 0.78rem; }
+  button.full { width: 100%; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  input, select, textarea {
+    font-family: inherit;
+    font-size: 0.9rem;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #d1d9e6;
+    background: #fff;
+    outline: none;
+    width: 100%;
+    transition: 0.15s;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-ring);
+  }
+  label { font-size: 0.8rem; color: #475569; display: block; margin-bottom: 4px; font-weight: 500; }
+
+  /* ========= 选购页 ========= */
+  .notice-box {
+    background: var(--primary-bg);
+    border: 1px solid var(--primary);
+    opacity: 0.9;
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-size: 0.82rem;
+    color: #1e293b;
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+  .notice-box .n-title { font-weight: 600; margin-bottom: 3px; color: var(--primary-dark); font-size: 0.85rem; }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  @media (max-width: 380px) { .product-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; } }
+
+  .product-card {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #eef2f6;
+    cursor: pointer;
+    transition: 0.15s;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .product-card:active { transform: scale(0.97); }
+  .product-card.soldout { opacity: 0.55; }
+  .product-card .thumb { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #f1f5f9; display: block; }
+  .product-card .thumb-placeholder {
+    width: 100%; aspect-ratio: 1/1;
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; color: #94a3b8;
+  }
+  .product-card .p-info { padding: 8px 9px; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .product-card .p-name { font-weight: 500; font-size: 0.85rem; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .product-card .p-price { color: #ef4444; font-weight: 700; font-size: 0.95rem; }
+  .product-card .p-stock { font-size: 0.7rem; color: #64748b; }
+  .product-card .p-stock.low { color: #ef4444; font-weight: 600; }
+  .product-card .p-cat {
+    position: absolute; top: 6px; left: 6px;
+    background: rgba(15,23,42,0.75);
+    color: #fff; font-size: 0.65rem;
+    padding: 2px 7px; border-radius: 20px;
+    backdrop-filter: blur(4px);
+  }
+  .product-card .qty-badge {
+    position: absolute; top: 6px; right: 6px;
+    background: var(--primary);
+    color: #fff; min-width: 22px; height: 22px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 600;
+    padding: 0 5px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .product-card .limit-tag {
+    position: absolute; bottom: 6px; right: 6px;
+    background: #f59e0b;
+    color: #fff; font-size: 0.62rem;
+    padding: 2px 6px; border-radius: 20px;
+    font-weight: 600;
+  }
+  .product-card .soldout-tag {
+    position: absolute; inset: 0;
+    background: rgba(255,255,255,0.6);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #ef4444; font-size: 0.95rem;
+    pointer-events: none;
+  }
+
+  .bottom-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #fff;
+    border-top: 1px solid #e9edf2;
+    padding: 10px 14px;
+    display: none; justify-content: space-between; align-items: center;
+    gap: 12px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+    z-index: 90;
+    max-width: 900px; margin: 0 auto;
+  }
+  .bottom-bar.show { display: flex; }
+  .bottom-bar .info { display: flex; flex-direction: column; gap: 1px; }
+  .bottom-bar .info .count { font-size: 0.78rem; color: #64748b; }
+  .bottom-bar .info .total { font-size: 1.1rem; font-weight: 700; color: #ef4444; }
+  .bottom-bar .btns { display: flex; gap: 6px; }
+
+  /* ========= 后台页 ========= */
+  .admin-group {
+    background: #fff;
+    border-radius: 14px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .admin-group.dragging { opacity: 0.4; }
+  .admin-group.drag-over { box-shadow: 0 0 0 2px var(--primary), 0 4px 12px var(--primary-ring); }
+  .admin-header {
+    padding: 13px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; user-select: none;
+    transition: 0.15s; gap: 8px;
+    background: #fff;
+  }
+  .admin-header:active { background: #f8fafc; }
+  .admin-header .g-title {
+    font-weight: 600; font-size: 0.92rem;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .admin-header .g-title .ico { font-size: 1.05rem; }
+  .admin-header .g-title .drag-handle { color: #94a3b8; font-size: 0.9rem; cursor: grab; padding: 0 2px; user-select: none; }
+  .admin-header .arrow { color: #94a3b8; font-size: 0.85rem; transition: transform 0.2s; }
+  .admin-group.open .admin-header .arrow { transform: rotate(90deg); }
+  .admin-group.open .admin-header { border-bottom: 1px solid #eef2f6; }
+  .admin-body { display: none; padding: 12px 14px; }
+  .admin-group.open .admin-body { display: block; }
+
+  .sub-tabs { display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .sub-tabs::-webkit-scrollbar { display: none; }
+  .sub-tab {
+    padding: 6px 12px; border-radius: 20px;
+    background: #eef2f6; color: #475569;
+    font-size: 0.78rem; white-space: nowrap;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .sub-tab.active { background: #0f172a; color: #fff; }
+
+  .cat-filter { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 10px; scrollbar-width: none; }
+  .cat-filter::-webkit-scrollbar { display: none; }
+  .cat-chip {
+    padding: 6px 12px; border-radius: 20px;
+    background: #eef2f6; color: #475569;
+    font-size: 0.78rem; white-space: nowrap;
+    cursor: pointer; border: 1px solid transparent; flex-shrink: 0;
+  }
+  .cat-chip.active { background: #0f172a; color: #fff; }
+
+  .stock-list { display: flex; flex-direction: column; gap: 8px; }
+  .stock-item {
+    display: flex; align-items: center; gap: 10px;
+    background: #f8fafc; padding: 10px;
+    border-radius: 12px;
+    border: 1px solid #eef2f6;
+  }
+  .stock-item img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
+  .stock-item .no-img {
+    width: 44px; height: 44px; border-radius: 8px;
+    background: #e2e8f0;
+    display: flex; align-items: center; justify-content: center;
+    color: #94a3b8; font-size: 1.2rem; flex-shrink: 0;
+  }
+  .stock-item .info { flex: 1; min-width: 0; }
+  .stock-item .name { font-weight: 500; font-size: 0.88rem; margin-bottom: 2px; }
+  .stock-item .meta { font-size: 0.72rem; color: #64748b; display: flex; gap: 6px; flex-wrap: wrap; }
+  .stock-item .stock-num { font-weight: 600; padding: 2px 8px; border-radius: 20px; background: #e2e8f0; font-size: 0.72rem; white-space: nowrap; }
+  .stock-item .stock-num.low { background: #fee2e2; color: #b91c1c; }
+  .stock-item .limit-num { font-weight: 600; padding: 2px 8px; border-radius: 20px; background: #fef3c7; color: #92400e; font-size: 0.72rem; white-space: nowrap; }
+  .stock-item .item-btns { display: flex; flex-direction: column; gap: 3px; }
+
+  .action-form { display: flex; flex-direction: column; gap: 8px; }
+  .action-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .action-row > * { flex: 1; min-width: 90px; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
+  .stat-card { background: #f8fafc; border-radius: 12px; padding: 10px 12px; border: 1px solid #eef2f6; }
+  .stat-card .l { font-size: 0.72rem; color: #64748b; margin-bottom: 3px; }
+  .stat-card .v { font-size: 1.15rem; font-weight: 700; color: #0f172a; }
+  .stat-card .v.money { color: #059669; }
+
+  .history-item { background: #f8fafc; padding: 10px 12px; border-radius: 12px; margin-bottom: 6px; border: 1px solid #eef2f6; }
+  .history-item .h-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .history-item .h-no {
+    font-family: 'SF Mono', Consolas, monospace;
+    font-size: 0.85rem;
+    background: var(--primary); color: #fff;
+    padding: 2px 10px; border-radius: 6px; font-weight: 700;
+  }
+  .history-item .h-amount { font-weight: 700; color: #059669; font-size: 0.88rem; }
+  .history-item .h-items { font-size: 0.78rem; color: #64748b; line-height: 1.45; }
+  .history-item .h-time { font-size: 0.68rem; color: #94a3b8; margin-top: 3px; }
+  .history-item .h-btns { display: flex; gap: 6px; margin-top: 6px; }
+  .history-item .h-btns button { padding: 4px 10px; font-size: 0.72rem; }
+
+  .img-input-box {
+    width: 70px; height: 70px;
+    border-radius: 10px;
+    border: 2px dashed #cbd5e1;
+    display: flex; align-items: center; justify-content: center;
+    background: #f8fafc; cursor: pointer;
+    overflow: hidden; position: relative; flex-shrink: 0;
+  }
+  .img-input-box img { width: 100%; height: 100%; object-fit: cover; }
+  .img-input-box .ph { font-size: 0.65rem; color: #94a3b8; text-align: center; padding: 3px; }
+  .img-input-box input { display: none; }
+
+  .bt-status {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; background: #f8fafc;
+    border-radius: 10px; font-size: 0.8rem; margin-bottom: 8px;
+  }
+  .bt-dot { width: 9px; height: 9px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
+  .bt-dot.on { background: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+  .bt-dot.connecting { background: #f59e0b; animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: 0.4; } }
+
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 500; padding: 16px;
+  }
+  .modal {
+    background: #fff; border-radius: 20px; padding: 18px;
+    max-width: 500px; width: 100%; max-height: 88vh; overflow-y: auto;
+    animation: popIn 0.2s ease;
+  }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  .modal h3 { margin-bottom: 12px; font-size: 1.05rem; }
+  .modal .m-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+  .toast {
+    position: fixed; bottom: 100px; left: 50%;
+    transform: translateX(-50%);
+    background: #0f172a; color: #fff;
+    padding: 11px 20px; border-radius: 40px;
+    font-size: 0.85rem; z-index: 999;
+    opacity: 0; transition: opacity 0.25s;
+    pointer-events: none; max-width: 88vw; text-align: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+  .toast.show { opacity: 1; }
+
+  .empty { text-align: center; color: #94a3b8; padding: 28px 16px; font-size: 0.85rem; }
+  .empty .big { font-size: 2.2rem; margin-bottom: 8px; display: block; }
+
+  .hint { font-size: 0.72rem; color: #94a3b8; margin-top: 4px; line-height: 1.45; }
+
+  .cart-panel { position: fixed; inset: 0; background: rgba(15,23,42,0.5); display: none; align-items: flex-end; z-index: 200; }
+  .cart-panel.show { display: flex; }
+  .cart-inner {
+    background: #fff; width: 100%; max-height: 85vh;
+    border-radius: 22px 22px 0 0;
+    padding: 18px; overflow-y: auto;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .cart-inner h3 { margin-bottom: 12px; display: flex; justify-content: space-between; font-size: 1rem; }
+  .cart-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f1f5f9; }
+  .cart-row .c-info { flex: 1; }
+  .cart-row .c-name { font-weight: 500; font-size: 0.88rem; }
+  .cart-row .c-price { font-size: 0.76rem; color: #64748b; margin-top: 2px; }
+  .cart-row .c-qty { display: flex; align-items: center; gap: 6px; }
+  .qty-btn {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #f1f5f9; color: #0f172a;
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
+  }
+  .qty-num { min-width: 20px; text-align: center; font-weight: 600; font-size: 0.88rem; }
+  .qty-num.clickable { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+
+  .bill-no {
+    font-family: 'SF Mono', Consolas, monospace;
+    background: var(--primary); color: #fff;
+    padding: 4px 12px; border-radius: 7px;
+    font-size: 0.85rem; font-weight: 700;
+    display: inline-block; margin-bottom: 10px;
+  }
+  .bill-notice {
+    background: var(--primary-bg);
+    border: 1px dashed var(--primary);
+    border-radius: 9px;
+    padding: 9px 11px; font-size: 0.78rem;
+    color: #1e293b; line-height: 1.55;
+    white-space: pre-wrap; margin-bottom: 10px;
+  }
+  .bill-item {
+    display: flex; justify-content: space-between;
+    padding: 7px 0; border-bottom: 1px dashed #e2e8f0;
+    font-size: 0.88rem; gap: 10px;
+  }
+  .bill-item.gift { background: #fffbeb; border-radius: 6px; padding-left: 8px; padding-right: 8px; }
+  .bill-total {
+    display: flex; justify-content: space-between;
+    padding: 11px 0 0; margin-top: 6px;
+    border-top: 2px solid #0f172a;
+    font-weight: 700; font-size: 1.1rem;
+  }
+  .qr-pay { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px dashed #e2e8f0; }
+  .qr-pay .q { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .qr-pay .q img { width: 130px; height: 130px; border-radius: 9px; object-fit: contain; border: 1px solid #eef2f6; }
+  .qr-pay .q span { font-size: 0.78rem; color: #475569; font-weight: 500; }
+
+  .cat-manage-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 4px; border-bottom: 1px solid #f1f5f9; gap: 8px; flex-wrap: wrap; }
+  .cat-manage-row .cn { flex: 1; font-size: 0.88rem; min-width: 140px; }
+  .cat-manage-row .cn b { font-weight: 600; }
+  .cat-manage-row .cn small { color: #94a3b8; font-size: 0.72rem; }
+
+  .theme-btn { padding: 10px 16px; border-radius: 30px; color: #fff; font-weight: 600; font-size: 0.85rem; border: none; }
+
+  .held-row { padding: 10px 4px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .held-row .info { flex: 1; min-width: 160px; }
+  .held-row .info b { font-family: 'SF Mono', Consolas, monospace; color: var(--primary); font-size: 0.95rem; }
+  .held-row .info small { color: #94a3b8; font-size: 0.72rem; }
+
+  .receipt-editor { display: flex; flex-direction: column; gap: 10px; }
+  .receipt-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .receipt-row > * { flex: 1; min-width: 80px; }
+  .receipt-row .fixed-w { flex: 0 0 auto; min-width: auto; }
+
+  .receipt-logo-box { display: flex; align-items: center; gap: 10px; padding: 10px; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1; }
+  .receipt-logo-preview {
+    width: 70px; height: 70px; border-radius: 10px;
+    border: 1px solid #e2e8f0; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; flex-shrink: 0;
+    font-size: 0.65rem; color: #94a3b8; text-align: center; cursor: pointer;
+  }
+  .receipt-logo-preview img { width: 100%; height: 100%; object-fit: contain; }
+
+  .format-toggle { display: flex; gap: 4px; background: #f1f5f9; padding: 3px; border-radius: 20px; }
+  .format-toggle button { flex: 1; padding: 6px 10px; font-size: 0.75rem; border-radius: 16px; background: transparent; color: #475569; border: none; }
+  .format-toggle button.active { background: #0f172a; color: #fff; }
+  .format-label { font-size: 0.78rem; color: #475569; font-weight: 500; margin-bottom: 4px; display: block; }
+
+  .receipt-preview {
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 12px; padding: 14px;
+    font-family: 'SF Mono', Consolas, monospace;
+    font-size: 0.72rem; line-height: 1.55; color: #1e293b;
+    white-space: pre; overflow-x: auto;
+    max-height: 340px; overflow-y: auto;
+  }
+  .receipt-preview .rp-img { display: block; max-width: 100px; margin: 0 auto 8px; border-radius: 4px; }
+  .receipt-preview .rp-center { text-align: center; }
+  .receipt-preview .rp-right { text-align: right; }
+  .receipt-preview .rp-bold { font-weight: 700; }
+  .receipt-preview .rp-big { font-size: 1.15em; }
+  .receipt-preview .rp-qr { display: block; margin: 8px auto; max-width: 120px; }
+
+  .slider-row { display: flex; align-items: center; gap: 10px; }
+  .slider-row input[type="range"] { flex: 1; padding: 0; }
+  .slider-val { font-size: 0.8rem; color: #0f172a; font-weight: 600; min-width: 28px; text-align: right; }
+
+  .brand-bg-box {
+    width: 100%; height: 80px; border-radius: 12px;
+    border: 2px dashed #cbd5e1;
+    background: #0f172a center/cover no-repeat;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; overflow: hidden; position: relative;
+    color: #fff; font-size: 0.8rem;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .brand-bg-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+  .brand-bg-box span { position: relative; z-index: 1; }
+  .brand-bg-box input { display: none; }
+
+  .receipt-modal-preview {
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 12px; padding: 18px;
+    font-family: 'SF Mono', Consolas, monospace;
+    font-size: 0.78rem; line-height: 1.6; color: #1e293b;
+    white-space: pre-wrap; word-break: break-word;
+    max-height: 420px; overflow-y: auto;
+  }
+  .receipt-modal-preview .rp-center { text-align: center; }
+  .receipt-modal-preview .rp-right { text-align: right; }
+  .receipt-modal-preview .rp-bold { font-weight: 700; }
+  .receipt-modal-preview .rp-big { font-size: 1.2em; }
+  .receipt-modal-preview .rp-img { display: block; max-width: 120px; margin: 0 auto 8px; }
+  .receipt-modal-preview .rp-qr { display: block; margin: 8px auto; max-width: 140px; }
+  .receipt-paper { background: #fefefe; padding: 14px; border-radius: 10px; border: 1px dashed #cbd5e1; box-shadow: inset 0 0 20px rgba(0,0,0,0.02); }
+
+  /* 图片裁剪弹窗 */
+  .crop-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.9);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 800; padding: 16px;
+    flex-direction: column; gap: 12px;
+    overflow-y: auto;
+  }
+  .crop-title { color: #fff; font-weight: 600; font-size: 1rem; }
+  .crop-stage { position: relative; background: #000; border-radius: 12px; overflow: hidden; touch-action: none; user-select: none; max-width: 100%; }
+  .crop-stage canvas { display: block; max-width: 100%; }
+  .crop-box { position: absolute; border: 2px solid #3b82f6; box-shadow: 0 0 0 9999px rgba(0,0,0,0.55); pointer-events: none; }
+  .crop-corner { position: absolute; width: 20px; height: 20px; background: #3b82f6; border: 2px solid #fff; border-radius: 4px; pointer-events: auto; touch-action: none; }
+  .crop-corner.tl { top: -10px; left: -10px; cursor: nwse-resize; }
+  .crop-corner.tr { top: -10px; right: -10px; cursor: nesw-resize; }
+  .crop-corner.bl { bottom: -10px; left: -10px; cursor: nesw-resize; }
+  .crop-corner.br { bottom: -10px; right: -10px; cursor: nwse-resize; }
+  .crop-move { position: absolute; inset: 0; pointer-events: auto; cursor: move; touch-action: none; }
+
+  .crop-toolbar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 600px; width: 100%; }
+  .crop-toolbar button { flex: 1; min-width: 80px; }
+  .crop-hint { color: #cbd5e1; font-size: 0.78rem; text-align: center; max-width: 600px; line-height: 1.5; }
+  .crop-preview-row { display: flex; gap: 10px; align-items: center; justify-content: center; color: #cbd5e1; font-size: 0.78rem; }
+  .crop-preview-thumb { width: 200px; height: 60px; background: #0f172a center/cover no-repeat; border-radius: 6px; border: 1px solid #334155; }
+  .crop-ratio-row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .crop-ratio-row button { padding: 6px 12px; font-size: 0.78rem; border-radius: 20px; background: #1e293b; color: #cbd5e1; border: 1px solid #334155; }
+  .crop-ratio-row button.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+
+  .footer-design { text-align: center; color: #94a3b8; font-size: 0.68rem; letter-spacing: 1.5px; padding: 24px 0 14px; user-select: none; }
+
+  .icon-upload-row { display: flex; gap: 10px; align-items: center; padding: 10px; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1; flex-wrap: wrap; }
+  .icon-upload-preview {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: #0f172a;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1.1rem;
+    overflow: hidden; flex-shrink: 0;
+    cursor: pointer;
+    border: 2px solid #e2e8f0;
+  }
+  .icon-upload-preview img { width: 100%; height: 100%; object-fit: cover; }
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar">
+  <h1>
+    <span id="brandIcon" class="brand-icon">📦</span>
+    <span id="brandText" class="brand-text">库存下单</span>
+  </h1>
+  <div class="actions">
+    <button class="icon-btn" id="quickPrintBtn" title="重打最近小票">
+      <span class="icon-inner" id="printIconInner">🖨</span>
+    </button>
+    <button class="icon-btn" id="quickExportBtn" title="导出当天订单">
+      <span class="icon-inner" id="exportIconInner">📥</span>
+    </button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="shop">🛍 选购</div>
+  <div class="tab" data-tab="admin">⚙️ 后台</div>
+</div>
+
+<!-- 选购页 -->
+<div class="page active" id="page-shop">
+  <div class="notice-box" id="noticeDisplay"></div>
+  <div class="card" style="padding: 10px;">
+    <div class="cat-filter" id="shopCatFilter"></div>
+    <div class="product-grid" id="productGrid"></div>
+  </div>
+</div>
+
+<!-- 后台页 -->
+<div class="page" id="page-admin">
+
+  <!-- 商品库存 -->
+  <div class="admin-group" id="grp-stock">
+    <div class="admin-header" data-toggle="grp-stock">
+      <div class="g-title">
+        <span class="drag-handle">⋮⋮</span>
+        <span class="ico">📦</span>商品库存 <span class="hint" id="stockCountHint" style="margin:0;">0 种</span>
+      </div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="admin-body">
+      <div class="sub-tabs" id="stockSubTabs">
+        <div class="sub-tab active" data-sub="list">列表</div>
+        <div class="sub-tab" data-sub="add">添加</div>
+        <div class="sub-tab" data-sub="cat">类型</div>
+        <div class="sub-tab" data-sub="qr">收款码</div>
+      </div>
+      <div class="sub-panel" id="sub-list">
+        <div class="cat-filter" id="stockCatFilter"></div>
+        <div class="stock-list" id="stockList"></div>
+      </div>
+      <div class="sub-panel" id="sub-add" style="display:none;">
+        <div class="action-form">
+          <div style="display:flex; gap:10px; align-items:center;">
+            <label class="img-input-box" id="addImgBox">
+              <span class="ph">📷<br>图片</span>
+              <input type="file" accept="image/*" id="addImgInput">
+            </label>
+            <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+              <input type="text" id="addName" placeholder="商品1">
+              <input type="text" id="addCat" placeholder="类型1" list="catList">
+              <datalist id="catList"></datalist>
+            </div>
+          </div>
+          <div class="action-row">
+            <div style="flex:1;">
+              <label>价格（元）</label>
+              <input type="number" id="addPrice" placeholder="例如 12.50" min="0.01" step="0.01">
+            </div>
+            <div style="flex:1;">
+              <label>库存（件）</label>
+              <input type="number" id="addStock" placeholder="例如 10" min="0" step="1" value="10">
+            </div>
+            <div style="flex:1;">
+              <label>单笔限购（0=不限）</label>
+              <input type="number" id="addLimit" placeholder="0" min="0" step="1" value="0">
+            </div>
+          </div>
+          <button class="green full" id="confirmAddBtn">确认添加</button>
+        </div>
+      </div>
+      <div class="sub-panel" id="sub-cat" style="display:none;">
+        <div class="action-row" style="margin-bottom:8px;">
+          <input type="text" id="newCatName" placeholder="新类型名称">
+          <button class="green small" id="addCatBtn" style="flex:0 0 70px;">添加</button>
+        </div>
+        <div id="catManageList" style="max-height:200px; overflow-y:auto;"></div>
+      </div>
+      <div class="sub-panel" id="sub-qr" style="display:none;">
+        <div style="display:flex; gap:14px; flex-wrap:wrap; justify-content:center;">
+          <div style="text-align:center;">
+            <label class="img-input-box" id="wechatBox" style="width:100px;height:100px;">
+              <span class="ph">微信码</span>
+              <input type="file" accept="image/*" id="wechatInput">
+            </label>
+            <div style="font-size:0.76rem; margin-top:4px;">微信</div>
+          </div>
+          <div style="text-align:center;">
+            <label class="img-input-box" id="alipayBox" style="width:100px;height:100px;">
+              <span class="ph">支付宝码</span>
+              <input type="file" accept="image/*" id="alipayInput">
+            </label>
+            <div style="font-size:0.76rem; margin-top:4px;">支付宝</div>
+          </div>
+        </div>
+        <div class="action-row" style="margin-top:10px;">
+          <button class="secondary small" id="removeWechatBtn">移除微信码</button>
+          <button class="secondary small" id="removeAlipayBtn">移除支付宝码</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 订单管理 -->
+  <div class="admin-group" id="grp-orders">
+    <div class="admin-header" data-toggle="grp-orders">
+      <div class="g-title">
+        <span class="drag-handle">⋮⋮</span>
+        <span class="ico">📊</span>订单管理
+      </div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="admin-body">
+      <input type="date" id="statsDate" style="margin-bottom:10px;">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="l">当日订单</div><div class="v" id="stOrders">0</div></div>
+        <div class="stat-card"><div class="l">当日营业额</div><div class="v money" id="stRevenue">¥0</div></div>
+        <div class="stat-card"><div class="l">当日件数</div><div class="v" id="stItems">0</div></div>
+        <div class="stat-card"><div class="l">累计营业额</div><div class="v money" id="stTotal">¥0</div></div>
+      </div>
+      <div class="action-row" style="margin-bottom:10px;">
+        <button class="secondary small" id="catStatBtn">📊 类型统计</button>
+        <button class="red small" id="clearHistoryBtn">🗑 清空历史</button>
+      </div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <!-- 保留订单 -->
+  <div class="admin-group" id="grp-held">
+    <div class="admin-header" data-toggle="grp-held">
+      <div class="g-title">
+        <span class="drag-handle">⋮⋮</span>
+        <span class="ico">⏸</span>保留订单 <span class="hint" id="heldCountHint" style="margin:0;"></span>
+      </div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="admin-body">
+      <div id="heldOrderList"></div>
+      <div class="hint">保留订单不会扣库存，点"恢复"可回到购物车。</div>
+    </div>
+  </div>
+
+  <!-- 满赠规则 -->
+  <div class="admin-group" id="grp-gifts">
+    <div class="admin-header" data-toggle="grp-gifts">
+      <div class="g-title">
+        <span class="drag-handle">⋮⋮</span>
+        <span class="ico">🎁</span>满赠规则
+      </div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="admin-body">
+      <div class="action-row" style="margin-bottom:8px; align-items:flex-end;">
+        <div style="flex:1;">
+          <label>满（元）</label>
+          <input type="number" id="giftThreshold" placeholder="50" min="0" step="0.01">
+        </div>
+        <div style="flex:1.5;">
+          <label>赠品</label>
+          <select id="giftProduct"></select>
+        </div>
+        <div style="flex:0.6;">
+          <label>数量</label>
+          <input type="number" id="giftQty" value="1" min="1" step="1">
+        </div>
+      </div>
+      <div class="action-row" style="margin-bottom:10px; align-items:flex-end;">
+        <div style="flex:1.2;">
+          <label>适用范围</label>
+          <select id="giftScope">
+            <option value="all">全部类型</option>
+            <option value="only">仅指定类型</option>
+            <option value="exclude">除指定类型外</option>
+          </select>
+        </div>
+        <div style="flex:1; display:none;" id="giftScopeCatWrap">
+          <label>类型</label>
+          <select id="giftScopeCat"></select>
+        </div>
+        <button class="green small" id="addGiftRuleBtn" style="flex:0 0 70px;">添加</button>
+      </div>
+      <div id="giftRuleList" style="max-height:220px; overflow-y:auto;"></div>
+      <div class="hint">满足金额时自动加购赠品（赠品显示为 ¥0，扣减库存）。</div>
+    </div>
+  </div>
+
+  <!-- 订单导出 -->
+  <div class="admin-group" id="grp-export">
+    <div class="admin-header" data-toggle="grp-export">
+      <div class="g-title">
+        <span class="drag-handle">⋮⋮</span>
+        <span class="ico">📥</span>订单导出
+      </div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="admin-body">
+      <input type="date" id="adminExportDate" style="margin-bottom:8px;">
+      <div class="action-row">
+        <button class="blue small" id="exportDayBtn">导出当天</button>
+        <button class="secondary small" id="exportAllBtn">导出全部</button>
+        <button class="secondary small" id="exportRangeBtn">导出区间</button>
+      </div>
+      <div id="rangeRow" style="display:none; margin-top:8px; gap:8px;" class="action-row">
+        <input type="date" id="rangeStart">
+        <input type="date" id="rangeEnd">
+        <button class="green small" id="doRangeExport" style="flex:0 0 80px;">导出</button>
+      </div>
+      <div class="hint">导出为 CSV 文件，可用 Excel/WPS 打开。</div>
+    </div>
+  </div>
+
+  <!-- 小票机 -->
+  <div class="admin-group" id="grp-printer">
+    <div class="admin-header" data-toggle="grp-printer">
+      <div class="g-title">
+        <span class="drag-handle">⋮⋮</span>
+        <span class="ico">🖨</span>小票机（蓝牙）
+      </div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="admin-body">
+      <div class="bt-status">
+        <span class="bt-dot" id="btDot"></span>
+        <span id="btStatusText" style="font-size:0.82rem;">未连接</span>
+      </div>
+      <div class="action-row">
+        <button class="blue small" id="btConnectBtn">🔗 连接</button>
+        <button class="secondary small" id="btDisconnectBtn">断开</button>
+        <button class="secondary small" id="testPrintBtn">🧪 测试</button>
+      </div>
+      <div class="hint">需支持 BLE 蓝牙的小票机。建议用 Chrome/Edge（需 HTTPS 或 localhost）。</div>
+    </div>
+  </div>
+
+  <!-- 小票模板 -->
+  <div class="admin-group open" id="grp-receipt">
+    <div class="admin-header" data-toggle="grp-receipt">
+      <div class="g-title">
+        <span class="drag-handle">⋮⋮</span>
+        <span class="ico">📝</span>小票模板
+      </div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="admin-body">
+      <div class="receipt-editor">
+
+        <div class="action-row">
+          <div style="flex:1;">
+            <label>摊位号</label>
+            <input type="text" id="rStallNo" placeholder="例如 A-01">
+          </div>
+          <div style="flex:1.5;">
+            <label>摊位名</label>
+            <input type="text" id="rStallName" placeholder="例如 张记水果">
+          </div>
+        </div>
+        <div class="hint">摊位信息在后台统一设置，结算界面只读显示。</div>
+
+        <div>
+          <span class="format-label">🖼 小票顶部图片（可选）</span>
+          <div class="receipt-logo-box">
+            <label class="receipt-logo-preview" id="logoPreviewBox">
+              <span>点击<br>上传</span>
+              <input type="file" accept="image/*" id="logoInput" style="display:none;">
+            </label>
+            <div style="flex:1;">
+              <div class="receipt-row">
+                <label style="flex:0 0 auto; display:flex; align-items:center; gap:6px; font-size:0.8rem; margin:0;">
+                  <input type="checkbox" id="logoEnable" style="width:auto;"> 启用图片
+                </label>
+                <select id="logoWidth" class="fixed-w" style="flex:0 0 100px;">
+                  <option value="80">小 80</option>
+                  <option value="120" selected>中 120</option>
+                  <option value="160">大 160</option>
+                  <option value="200">超大 200</option>
+                </select>
+              </div>
+              <div class="hint">建议黑白线条 Logo。</div>
+              <button class="secondary small" id="removeLogoBtn" style="margin-top:6px;">移除图片</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span class="format-label">🖼 小票底部图片（可选）</span>
+          <div class="receipt-logo-box">
+            <label class="receipt-logo-preview" id="logoBottomPreviewBox">
+              <span>点击<br>上传</span>
+              <input type="file" accept="image/*" id="logoBottomInput" style="display:none;">
+            </label>
+            <div style="flex:1;">
+              <div class="receipt-row">
+                <label style="flex:0 0 auto; display:flex; align-items:center; gap:6px; font-size:0.8rem; margin:0;">
+                  <input type="checkbox" id="logoBottomEnable" style="width:auto;"> 启用图片
+                </label>
+                <select id="logoBottomWidth" class="fixed-w" style="flex:0 0 100px;">
+                  <option value="80">小 80</option>
+                  <option value="120" selected>中 120</option>
+                  <option value="160">大 160</option>
+                  <option value="200">超大 200</option>
+                </select>
+              </div>
+              <div class="hint">显示在底部留言下方、二维码上方。</div>
+              <button class="secondary small" id="removeLogoBottomBtn" style="margin-top:6px;">移除图片</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span class="format-label">📱 小票订单二维码（扫码显示订单详情）</span>
+          <div class="receipt-logo-box" style="flex-direction:column; align-items:stretch; gap:8px;">
+            <div class="receipt-row">
+              <label style="flex:0 0 auto; display:flex; align-items:center; gap:6px; font-size:0.8rem; margin:0;">
+                <input type="checkbox" id="qrEnable" style="width:auto;"> 启用二维码
+              </label>
+              <select id="qrSize" class="fixed-w" style="flex:0 0 110px;">
+                <option value="100">小 100px</option>
+                <option value="140" selected>中 140px</option>
+                <option value="180">大 180px</option>
+              </select>
+            </div>
+            <div class="hint">
+              二维码内容是<b>纯文本订单详情</b>，扫码后直接显示订单号、时间、商品、金额。<br>
+              · 商品 ≤ 8 件：完整明细<br>
+              · 商品 &gt; 8 件：仅含订单号 + 合计
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label>店铺名称</label>
+          <input type="text" id="rShopName" placeholder="例如：我的小店">
+        </div>
+        <div>
+          <label>小票标题</label>
+          <input type="text" id="rTitle" placeholder="销售小票">
+        </div>
+
+        <div>
+          <label>小票字体（仅影响预览）</label>
+          <select id="rFont">
+            <option value="'SF Mono', Consolas, monospace">等宽（推荐）</option>
+            <option value="system-ui, sans-serif">系统无衬线</option>
+            <option value="Georgia, serif">衬线</option>
+            <option value="'Courier New', monospace">Courier</option>
+            <option value="'SimSun', serif">宋体</option>
+            <option value="'SimHei', sans-serif">黑体</option>
+          </select>
+          <div class="hint">实际打印字体由打印机固件决定，此处仅预览。</div>
+        </div>
+
+        <div>
+          <span class="format-label">标题排版</span>
+          <div class="receipt-row">
+            <div style="flex:1;">
+              <span class="format-label" style="font-weight:400;">对齐</span>
+              <div class="format-toggle" data-group="titleAlign">
+                <button data-val="left">左</button>
+                <button data-val="center" class="active">中</button>
+                <button data-val="right">右</button>
+              </div>
+            </div>
+            <div style="flex:1;">
+              <span class="format-label" style="font-weight:400;">字号</span>
+              <div class="format-toggle" data-group="titleSize">
+                <button data-val="1">正常</button>
+                <button data-val="2" class="active">双倍</button>
+                <button data-val="3">三倍</button>
+              </div>
+            </div>
+            <div style="flex:0 0 auto; display:flex; align-items:flex-end;">
+              <label style="display:flex; align-items:center; gap:4px; font-size:0.78rem; margin:0 0 4px 0;">
+                <input type="checkbox" id="titleBold" checked style="width:auto;"> 加粗
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span class="format-label">正文字号</span>
+          <div class="format-toggle" data-group="bodySize">
+            <button data-val="1" class="active">正常</button>
+            <button data-val="2">双倍</button>
+          </div>
+        </div>
+
+        <div>
+          <span class="format-label">分隔线样式</span>
+          <div class="format-toggle" data-group="dividerStyle">
+            <button data-val="dash" class="active">虚线</button>
+            <button data-val="star">星号</button>
+            <button data-val="solid">实线</button>
+            <button data-val="none">无</button>
+          </div>
+        </div>
+
+        <div>
+          <label>纸张宽度</label>
+          <select id="rWidth">
+            <option value="32">58mm（32字符）</option>
+            <option value="48" selected>80mm（48字符）</option>
+          </select>
+        </div>
+
+        <div>
+          <label>附加内容（可留空，支持换行）</label>
+          <textarea id="rExtra" placeholder="例如：&#10;本店地址：xxx路1号&#10;摊主电话：138xxxx" style="min-height:70px;"></textarea>
+        </div>
+
+        <div>
+          <label>底部留言</label>
+          <input type="text" id="rFooter" placeholder="谢谢惠顾，欢迎下次光临！">
+        </div>
+
+        <div>
+          <span class="format-label">打印后走纸行数</span>
+          <div class="slider-row">
+            <input type="range" id="rFeedLines" min="0" max="6" value="2">
+            <span class="slider-val" id="rFeedVal">2</span>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button class="green small" id="saveReceiptBtn">💾 保存模板</button>
+          <button class="blue small" id="previewReceiptBtn">👁 本地预览</button>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div class="format-label">实时预览</div>
+        <div class="receipt-preview" id="receiptPreview"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主题颜色 -->
+  <div class="admin-group" id="grp-theme">
+    <div class="admin-header" data-toggle="grp-theme">
+      <div class="g-title">
+        <span class="drag-handle">⋮⋮</span>
+        <span class="ico">🎨</span>主题颜色
+      </div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="admin-body">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="theme-btn" data-theme="blue" style="background:#2563eb;">🔵 蓝色</button>
+        <button class="theme-btn" data-theme="red" style="background:#dc2626;">🔴 红色</button>
+        <button class="theme-btn" data-theme="yellow" style="background:#eab308;">🟡 黄色</button>
+        <button class="theme-btn" data-theme="green" style="background:#16a34a;">🟢 绿色</button>
+      </div>
+      <div class="hint">切换后立即生效，保存在本地。</div>
+    </div>
+  </div>
+
+  <!-- 顶栏自定义 -->
+  <div class="admin-group" id="grp-brand">
+    <div class="admin-header" data-toggle="grp-brand">
+      <div class="g-title">
+        <span class="drag-handle">⋮⋮</span>
+        <span class="ico">🖼</span>顶栏自定义
+      </div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="admin-body">
+      <span class="format-label">顶栏背景图（整条替换）</span>
+      <label class="brand-bg-box" id="brandBgBox">
+        <span id="brandBgHint">点击上传背景图</span>
+        <input type="file" accept="image/*" id="brandBgInput" style="display:none;">
+      </label>
+      <div class="hint">建议横条图，宽 800~1200px，高 80~120px。上传后可裁剪。</div>
+
+      <div style="margin-top:10px;">
+        <label>顶栏标题文字</label>
+        <input type="text" id="brandTextInput" placeholder="库存下单">
+      </div>
+      <div class="hint">标题会叠加在背景图上（带阴影），留空则不显示文字。</div>
+
+      <div style="margin-top:14px;">
+        <span class="format-label">🖨 通知图标 · 打印按钮</span>
+        <div class="icon-upload-row">
+          <label class="icon-upload-preview" id="printIconBox">
+            <span id="printIconPreview">🖨</span>
+            <input type="file" accept="image/*" id="printIconInput" style="display:none;">
+          </label>
+          <div style="flex:1; min-width:140px;">
+            <label style="font-size:0.72rem;">图标大小 <span id="printIconSizeVal">24</span>px</label>
+            <input type="range" id="printIconSize" min="16" max="36" value="24">
+          </div>
+          <button class="secondary small" id="removePrintIconBtn">移除</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <span class="format-label">📥 通知图标 · 导出按钮</span>
+        <div class="icon-upload-row">
+          <label class="icon-upload-preview" id="exportIconBox">
+            <span id="exportIconPreview">📥</span>
+            <input type="file" accept="image/*" id="exportIconInput" style="display:none;">
+          </label>
+          <div style="flex:1; min-width:140px;">
+            <label style="font-size:0.72rem;">图标大小 <span id="exportIconSizeVal">24</span>px</label>
+            <input type="range" id="exportIconSize" min="16" max="36" value="24">
+          </div>
+          <button class="secondary small" id="removeExportIconBtn">移除</button>
+        </div>
+      </div>
+
+      <div class="action-row" style="margin-top:14px;">
+        <button class="green small" id="saveBrandBtn">💾 保存顶栏设置</button>
+        <button class="secondary small" id="removeBrandBgBtn">移除背景图</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 数据管理 -->
+  <div class="admin-group" id="grp-data">
+    <div class="admin-header" data-toggle="grp-data">
+      <div class="g-title">
+        <span class="drag-handle">⋮⋮</span>
+        <span class="ico">💾</span>数据管理
+      </div>
+      <div class="arrow">▶</div>
+    </div>
+    <div class="admin-body">
+      <div class="action-row">
+        <button class="secondary small" id="backupBtn">💾 备份</button>
+        <button class="secondary small" id="restoreBtn">📂 恢复</button>
+        <input type="file" id="restoreInput" accept=".json" style="display:none;">
+      </div>
+      <div class="hint">备份为 JSON 文件，恢复时选择该文件即可。</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer-design">DESIGN BY SFAINCE</div>
+
+<div class="bottom-bar" id="bottomBar">
+  <div class="info">
+    <div class="count" id="cartCountText">已选 0 件</div>
+    <div class="total" id="cartTotalText">¥0.00</div>
+  </div>
+  <div class="btns">
+    <button class="secondary small" id="viewCartBtn">查看</button>
+    <button class="green" id="checkoutBtn">结算</button>
+  </div>
+</div>
+
+<div class="cart-panel" id="cartPanel">
+  <div class="cart-inner">
+    <h3>🛒 购物车 <button class="small secondary" id="closeCartBtn">关闭</button></h3>
+    <div id="cartList"></div>
+    <button class="red full" id="clearCartBtn" style="margin-top:14px;">清空购物车</button>
+  </div>
+</div>
+
+<div class="cart-panel" id="billPanel">
+  <div class="cart-inner" style="max-height:90vh;">
+    <h3>💰 待支付账单 <button class="small secondary" id="closeBillBtn">关闭</button></h3>
+    <div id="billStallDisplay" style="margin-bottom:12px; padding:10px 12px; background:#f8fafc; border-radius:10px; font-size:0.85rem; display:none;">
+      <span style="color:#64748b;">摊位：</span>
+      <b id="billStallText"></b>
+    </div>
+    <div id="billContent"></div>
+    <div id="printOptionRow" style="margin-top:14px; display:none; align-items:center; gap:8px; padding:10px 12px; background:#f8fafc; border-radius:12px;">
+      <input type="checkbox" id="autoPrintCheck" checked style="width:auto;">
+      <label for="autoPrintCheck" style="margin:0; font-size:0.85rem;">支付后自动打印小票</label>
+    </div>
+    <div class="action-row" style="margin-top:12px;">
+      <button class="secondary small" id="previewBillBtn" style="flex:1;">👁 预览小票</button>
+      <button class="green small" id="printBillBtn" style="flex:1;">🖨 立即打印</button>
+    </div>
+    <button class="green full" id="payDoneBtn" style="margin-top:10px;">✅ 我已支付</button>
+    <button class="secondary full" id="holdBillBtn" style="margin-top:8px;">⏸ 保留订单（延后处理）</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="modalRoot"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ============================================================
+  // 完整版 QR 编码器（支持到版本 40）
+  // ============================================================
+  var qrcode = (function(){
+    var QRMode = { MODE_NUMBER:1<<0, MODE_ALPHA_NUM:1<<1, MODE_8BIT_BYTE:1<<2, MODE_KANJI:1<<3 };
+    var QRErrorCorrectLevel = { L:1, M:0, Q:3, H:2 };
+    var QRMaskPattern = { PATTERN000:0, PATTERN001:1, PATTERN010:2, PATTERN011:3, PATTERN100:4, PATTERN101:5, PATTERN110:6, PATTERN111:7 };
+    var QRMath = {
+      glog: function(n){ if(n<1) throw new Error('glog('+n+')'); return QRMath.LOG_TABLE[n]; },
+      gexp: function(n){ while(n<0) n+=255; while(n>=256) n-=255; return QRMath.EXP_TABLE[n]; },
+      EXP_TABLE: new Array(256),
+      LOG_TABLE: new Array(256)
+    };
+    for(var i=0;i<8;i++) QRMath.EXP_TABLE[i]=1<<i;
+    for(var i=8;i<256;i++) QRMath.EXP_TABLE[i] = QRMath.EXP_TABLE[i-4]^QRMath.EXP_TABLE[i-5]^QRMath.EXP_TABLE[i-6]^QRMath.EXP_TABLE[i-8];
+    for(var i=0;i<255;i++) QRMath.LOG_TABLE[QRMath.EXP_TABLE[i]] = i;
+
+    function QRPolynomial(num, shift){
+      var offset = 0;
+      while(offset < num.length && num[offset] == 0) offset++;
+      this.num = new Array(num.length - offset + shift);
+      for(var i=0;i<num.length-offset;i++) this.num[i] = num[i+offset];
+    }
+    QRPolynomial.prototype = {
+      get: function(index){ return this.num[index]; },
+      getLength: function(){ return this.num.length; },
+      multiply: function(e){
+        var num = new Array(this.getLength() + e.getLength() - 1);
+        for(var i=0;i<this.getLength();i++) for(var j=0;j<e.getLength();j++)
+          num[i+j] ^= QRMath.gexp(QRMath.glog(this.get(i)) + QRMath.glog(e.get(j)));
+        return new QRPolynomial(num, 0);
+      },
+      mod: function(e){
+        if(this.getLength() - e.getLength() < 0) return this;
+        var ratio = QRMath.glog(this.get(0)) - QRMath.glog(e.get(0));
+        var num = new Array(this.getLength());
+        for(var i=0;i<this.getLength();i++) num[i] = this.get(i);
+        for(var i=0;i<e.getLength();i++) num[i] ^= QRMath.gexp(QRMath.glog(e.get(i)) + ratio);
+        return new QRPolynomial(num, 0).mod(e);
+      }
+    };
+
+    function QRRSBlock(totalCount, dataCount){
+      this.totalCount = totalCount;
+      this.dataCount = dataCount;
+    }
+    QRRSBlock.RS_BLOCK_TABLE = [
+      [1,26,19],[1,26,16],[1,26,13],[1,26,9],
+      [1,44,34],[1,44,28],[1,44,22],[1,44,16],
+      [1,70,55],[1,70,44],[2,35,17],[2,35,13],
+      [1,100,80],[2,50,32],[2,50,24],[4,25,9],
+      [1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],
+      [2,86,68],[4,43,27],[4,43,19],[4,43,15],
+      [2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],
+      [2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],
+      [2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],
+      [2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],
+      [4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],
+      [2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],
+      [4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],
+      [3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],
+      [5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],
+      [5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],
+      [1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],
+      [5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],
+      [3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],
+      [3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],
+      [4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],
+      [2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],
+      [4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],
+      [6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],
+      [8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],
+      [10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],
+      [8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],
+      [3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],
+      [7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],
+      [5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],
+      [13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],
+      [17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],
+      [17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],
+      [13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],
+      [12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],
+      [6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],
+      [17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],
+      [4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],
+      [20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],
+      [19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]
+    ];
+    QRRSBlock.getRSBlocks = function(typeNumber, errorCorrectLevel){
+      var rsBlock = QRRSBlock.getRsBlockTable(typeNumber, errorCorrectLevel);
+      if(rsBlock == undefined) throw new Error('bad rs block @ typeNumber:'+typeNumber+'/errorCorrectLevel:'+errorCorrectLevel);
+      var length = rsBlock.length / 3;
+      var list = [];
+      for(var i=0;i<length;i++){
+        var count = rsBlock[i*3+0];
+        var totalCount = rsBlock[i*3+1];
+        var dataCount = rsBlock[i*3+2];
+        for(var j=0;j<count;j++) list.push(new QRRSBlock(totalCount, dataCount));
+      }
+      return list;
+    };
+    QRRSBlock.getRsBlockTable = function(typeNumber, errorCorrectLevel){
+      switch(errorCorrectLevel){
+        case QRErrorCorrectLevel.L: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber-1)*4+0];
+        case QRErrorCorrectLevel.M: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber-1)*4+1];
+        case QRErrorCorrectLevel.Q: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber-1)*4+2];
+        case QRErrorCorrectLevel.H: return QRRSBlock.RS_BLOCK_TABLE[(typeNumber-1)*4+3];
+        default: return undefined;
+      }
+    };
+
+    function QRBitBuffer(){ this.buffer = []; this.length = 0; }
+    QRBitBuffer.prototype = {
+      get: function(index){ var bufIndex = Math.floor(index/8); return ((this.buffer[bufIndex] >>> (7 - index % 8)) & 1) == 1; },
+      put: function(num, length){ for(var i=0;i<length;i++) this.putBit(((num >>> (length - i - 1)) & 1) == 1); },
+      getLengthInBits: function(){ return this.length; },
+      putBit: function(bit){ var bufIndex = Math.floor(this.length/8); if(this.buffer.length <= bufIndex) this.buffer.push(0); if(bit) this.buffer[bufIndex] |= (0x80 >>> (this.length % 8)); this.length++; }
+    };
+
+    function QR8bitByte(data){
+      this.mode = QRMode.MODE_8BIT_BYTE;
+      this.data = data;
+      this.parsedData = [];
+      for(var i=0,l=this.data.length;i<l;i++){
+        var byteArray=[];
+        var code=this.data.charCodeAt(i);
+        if(code>0x10000){
+          byteArray[0]=0xF0|((code&0x1C0000)>>>18);
+          byteArray[1]=0x80|((code&0x3F000)>>>12);
+          byteArray[2]=0x80|((code&0xFC0)>>>6);
+          byteArray[3]=0x80|(code&0x3F);
+        } else if(code>0x800){
+          byteArray[0]=0xE0|((code&0xF000)>>>12);
+          byteArray[1]=0x80|((code&0xFC0)>>>6);
+          byteArray[2]=0x80|(code&0x3F);
+        } else if(code>0x80){
+          byteArray[0]=0xC0|((code&0x7C0)>>>6);
+          byteArray[1]=0x80|(code&0x3F);
+        } else {
+          byteArray[0]=code;
+        }
+        this.parsedData.push(byteArray);
+      }
+      this.parsedData = Array.prototype.concat.apply([], this.parsedData);
+      if(this.parsedData.length != this.data.length){
+        this.parsedData.unshift(191);
+        this.parsedData.unshift(187);
+        this.parsedData.unshift(239);
+      }
+    }
+    QR8bitByte.prototype = {
+      getLength: function(){ return this.parsedData.length; },
+      write: function(buffer){ for(var i=0,l=this.parsedData.length;i<l;i++) buffer.put(this.parsedData[i], 8); }
+    };
+
+    function QRCode(typeNumber, errorCorrectLevel){
+      this.typeNumber = typeNumber;
+      this.errorCorrectLevel = errorCorrectLevel;
+      this.modules = null;
+      this.moduleCount = 0;
+      this.dataCache = null;
+      this.dataList = [];
+    }
+    QRCode.prototype = {
+      addData: function(data){ var newData = new QR8bitByte(data); this.dataList.push(newData); this.dataCache = null; },
+      isDark: function(row, col){ if(row<0||this.moduleCount<=row||col<0||this.moduleCount<=col) throw new Error(row+','+col); return this.modules[row][col]; },
+      getModuleCount: function(){ return this.moduleCount; },
+      make: function(){
+        if(this.typeNumber < 1){
+          for(var typeNumber=1;typeNumber<40;typeNumber++){
+            var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, this.errorCorrectLevel);
+            var buffer = new QRBitBuffer();
+            var totalDataCount = 0;
+            for(var i=0;i<rsBlocks.length;i++) totalDataCount += rsBlocks[i].dataCount;
+            for(var i=0;i<this.dataList.length;i++){
+              var data = this.dataList[i];
+              buffer.put(data.mode, 4);
+              buffer.put(data.getLength(), QRUtil.getLengthInBits(data.mode, typeNumber));
+              data.write(buffer);
+            }
+            if(buffer.getLengthInBits() <= totalDataCount * 8) break;
+          }
+          this.typeNumber = typeNumber;
+        }
+        this.makeImpl(false, this.getBestMaskPattern());
+      },
+      makeImpl: function(test, maskPattern){
+        this.moduleCount = this.typeNumber * 4 + 17;
+        this.modules = new Array(this.moduleCount);
+        for(var row=0;row<this.moduleCount;row++){ this.modules[row] = new Array(this.moduleCount); for(var col=0;col<this.moduleCount;col++) this.modules[row][col] = null; }
+        this.setupPositionProbePattern(0,0);
+        this.setupPositionProbePattern(this.moduleCount-7,0);
+        this.setupPositionProbePattern(0,this.moduleCount-7);
+        this.setupPositionAdjustPattern();
+        this.setupTimingPattern();
+        this.setupTypeInfo(test, maskPattern);
+        if(this.typeNumber >= 7) this.setupTypeNumber(test);
+        if(this.dataCache == null) this.dataCache = QRCode.createData(this.typeNumber, this.errorCorrectLevel, this.dataList);
+        this.mapData(this.dataCache, maskPattern);
+      },
+      setupPositionProbePattern: function(row, col){
+        for(var r=-1;r<=7;r++){
+          if(row+r<=-1 || this.moduleCount <= row+r) continue;
+          for(var c=-1;c<=7;c++){
+            if(col+c<=-1 || this.moduleCount <= col+c) continue;
+            if((0<=r&&r<=6&&(c==0||c==6)) || (0<=c&&c<=6&&(r==0||r==6)) || (2<=r&&r<=4&&2<=c&&c<=4)) this.modules[row+r][col+c] = true;
+            else this.modules[row+r][col+c] = false;
+          }
+        }
+      },
+      getBestMaskPattern: function(){
+        var minLostPoint = 0, pattern = 0;
+        for(var i=0;i<8;i++){
+          this.makeImpl(true, i);
+          var lostPoint = QRUtil.getLostPoint(this);
+          if(i==0 || minLostPoint > lostPoint){ minLostPoint = lostPoint; pattern = i; }
+        }
+        return pattern;
+      },
+      setupTimingPattern: function(){
+        for(var r=8;r<this.moduleCount-8;r++){ if(this.modules[r][6] != null) continue; this.modules[r][6] = (r % 2 == 0); }
+        for(var c=8;c<this.moduleCount-8;c++){ if(this.modules[6][c] != null) continue; this.modules[6][c] = (c % 2 == 0); }
+      },
+      setupPositionAdjustPattern: function(){
+        var pos = QRUtil.getPatternPosition(this.typeNumber);
+        for(var i=0;i<pos.length;i++){
+          for(var j=0;j<pos.length;j++){
+            var row = pos[i], col = pos[j];
+            if(this.modules[row][col] != null) continue;
+            for(var r=-2;r<=2;r++) for(var c=-2;c<=2;c++){
+              if(r==-2||r==2||c==-2||c==2||(r==0&&c==0)) this.modules[row+r][col+c] = true;
+              else this.modules[row+r][col+c] = false;
+            }
+          }
+        }
+      },
+      setupTypeNumber: function(test){
+        var bits = QRUtil.getBCHTypeNumber(this.typeNumber);
+        for(var i=0;i<18;i++){ var mod = (!test && ((bits >> i) & 1) == 1); this.modules[Math.floor(i/3)][i%3 + this.moduleCount - 8 - 3] = mod; }
+        for(var i=0;i<18;i++){ var mod = (!test && ((bits >> i) & 1) == 1); this.modules[i%3 + this.moduleCount - 8 - 3][Math.floor(i/3)] = mod; }
+      },
+      setupTypeInfo: function(test, maskPattern){
+        var data = (this.errorCorrectLevel << 3) | maskPattern;
+        var bits = QRUtil.getBCHTypeInfo(data);
+        for(var i=0;i<15;i++){
+          var mod = (!test && ((bits >> i) & 1) == 1);
+          if(i < 6) this.modules[i][8] = mod;
+          else if(i < 8) this.modules[i+1][8] = mod;
+          else this.modules[this.moduleCount - 15 + i][8] = mod;
+        }
+        for(var i=0;i<15;i++){
+          var mod = (!test && ((bits >> i) & 1) == 1);
+          if(i < 8) this.modules[8][this.moduleCount - i - 1] = mod;
+          else if(i < 9) this.modules[8][15 - i - 1 + 1] = mod;
+          else this.modules[8][15 - i - 1] = mod;
+        }
+        this.modules[this.moduleCount - 8][8] = (!test);
+      },
+      mapData: function(data, maskPattern){
+        var inc = -1, row = this.moduleCount - 1, bitIndex = 7, byteIndex = 0;
+        for(var col=this.moduleCount-1;col>0;col-=2){
+          if(col == 6) col--;
+          while(true){
+            for(var c=0;c<2;c++){
+              if(this.modules[row][col-c] == null){
+                var dark = false;
+                if(byteIndex < data.length) dark = (((data[byteIndex] >>> bitIndex) & 1) == 1);
+                var mask = QRUtil.getMask(maskPattern, row, col-c);
+                if(mask) dark = !dark;
+                this.modules[row][col-c] = dark;
+                bitIndex--;
+                if(bitIndex == -1){ byteIndex++; bitIndex = 7; }
+              }
+            }
+            row += inc;
+            if(row < 0 || this.moduleCount <= row){ row -= inc; inc = -inc; break; }
+          }
+        }
+      }
+    };
+    QRCode.PAD0 = 0xEC;
+    QRCode.PAD1 = 0x11;
+    QRCode.createData = function(typeNumber, errorCorrectLevel, dataList){
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
+      var buffer = new QRBitBuffer();
+      for(var i=0;i<dataList.length;i++){
+        var data = dataList[i];
+        buffer.put(data.mode, 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.mode, typeNumber));
+        data.write(buffer);
+      }
+      var totalDataCount = 0;
+      for(var i=0;i<rsBlocks.length;i++) totalDataCount += rsBlocks[i].dataCount;
+      if(buffer.getLengthInBits() > totalDataCount * 8) throw new Error('code length overflow. ('+buffer.getLengthInBits()+'>'+totalDataCount*8+')');
+      if(buffer.getLengthInBits() + 4 <= totalDataCount * 8) buffer.put(0, 4);
+      while(buffer.getLengthInBits() % 8 != 0) buffer.putBit(false);
+      while(true){
+        if(buffer.getLengthInBits() >= totalDataCount * 8) break;
+        buffer.put(QRCode.PAD0, 8);
+        if(buffer.getLengthInBits() >= totalDataCount * 8) break;
+        buffer.put(QRCode.PAD1, 8);
+      }
+      return QRCode.createBytes(buffer, rsBlocks);
+    };
+    QRCode.createBytes = function(buffer, rsBlocks){
+      var offset = 0;
+      var maxDcCount = 0, maxEcCount = 0;
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+      for(var r=0;r<rsBlocks.length;r++){
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+        dcdata[r] = new Array(dcCount);
+        for(var i=0;i<dcdata[r].length;i++) dcdata[r][i] = 0xff & buffer.buffer[i+offset];
+        offset += dcCount;
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = new QRPolynomial(dcdata[r], rsPoly.getLength()-1);
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength()-1);
+        for(var i=0;i<ecdata[r].length;i++){ var modIndex = i + modPoly.getLength() - ecdata[r].length; ecdata[r][i] = (modIndex >= 0)? modPoly.get(modIndex) : 0; }
+      }
+      var totalCodeCount = 0;
+      for(var i=0;i<rsBlocks.length;i++) totalCodeCount += rsBlocks[i].totalCount;
+      var data = new Array(totalCodeCount);
+      var index = 0;
+      for(var i=0;i<maxDcCount;i++) for(var r=0;r<rsBlocks.length;r++){ if(i < dcdata[r].length) data[index++] = dcdata[r][i]; }
+      for(var i=0;i<maxEcCount;i++) for(var r=0;r<rsBlocks.length;r++){ if(i < ecdata[r].length) data[index++] = ecdata[r][i]; }
+      return data;
+    };
+
+    var QRUtil = {
+      PATTERN_POSITION_TABLE: [[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],
+      G15: (1<<10)|(1<<8)|(1<<5)|(1<<4)|(1<<2)|(1<<1)|(1<<0),
+      G18: (1<<12)|(1<<11)|(1<<10)|(1<<9)|(1<<8)|(1<<5)|(1<<2)|(1<<0),
+      G15_MASK: (1<<14)|(1<<12)|(1<<10)|(1<<4)|(1<<1),
+      getBCHTypeInfo: function(data){ var d = data << 10; while(QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15) >= 0) d ^= (QRUtil.G15 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15))); return ((data << 10) | d) ^ QRUtil.G15_MASK; },
+      getBCHTypeNumber: function(data){ var d = data << 12; while(QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18) >= 0) d ^= (QRUtil.G18 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18))); return (data << 12) | d; },
+      getBCHDigit: function(data){ var digit = 0; while(data != 0){ digit++; data >>>= 1; } return digit; },
+      getPatternPosition: function(typeNumber){ return QRUtil.PATTERN_POSITION_TABLE[typeNumber-1]; },
+      getMask: function(maskPattern, i, j){
+        switch(maskPattern){
+          case QRMaskPattern.PATTERN000: return (i+j) % 2 == 0;
+          case QRMaskPattern.PATTERN001: return i % 2 == 0;
+          case QRMaskPattern.PATTERN010: return j % 3 == 0;
+          case QRMaskPattern.PATTERN011: return (i+j) % 3 == 0;
+          case QRMaskPattern.PATTERN100: return (Math.floor(i/2) + Math.floor(j/3)) % 2 == 0;
+          case QRMaskPattern.PATTERN101: return (i*j) % 2 + (i*j) % 3 == 0;
+          case QRMaskPattern.PATTERN110: return ((i*j) % 2 + (i*j) % 3) % 2 == 0;
+          case QRMaskPattern.PATTERN111: return ((i*j) % 3 + (i+j) % 2) % 2 == 0;
+          default: throw new Error('bad maskPattern:'+maskPattern);
+        }
+      },
+      getErrorCorrectPolynomial: function(errorCorrectLength){ var a = new QRPolynomial([1], 0); for(var i=0;i<errorCorrectLength;i++) a = a.multiply(new QRPolynomial([1, QRMath.gexp(i)], 0)); return a; },
+      getLengthInBits: function(mode, type){
+        if(1 <= type && type < 10) return (mode == QRMode.MODE_NUMBER)?10:(mode == QRMode.MODE_ALPHA_NUM)?9:(mode == QRMode.MODE_8BIT_BYTE)?8:(mode == QRMode.MODE_KANJI)?8:(function(){throw new Error('mode:'+mode);})();
+        else if(type < 27) return (mode == QRMode.MODE_NUMBER)?12:(mode == QRMode.MODE_ALPHA_NUM)?11:(mode == QRMode.MODE_8BIT_BYTE)?16:(mode == QRMode.MODE_KANJI)?10:(function(){throw new Error('mode:'+mode);})();
+        else if(type < 41) return (mode == QRMode.MODE_NUMBER)?14:(mode == QRMode.MODE_ALPHA_NUM)?13:(mode == QRMode.MODE_8BIT_BYTE)?16:(mode == QRMode.MODE_KANJI)?12:(function(){throw new Error('mode:'+mode);})();
+        else throw new Error('type:'+type);
+      },
+      getLostPoint: function(qrCode){
+        var moduleCount = qrCode.getModuleCount();
+        var lostPoint = 0;
+        for(var row=0;row<moduleCount;row++) for(var col=0;col<moduleCount;col++){
+          var sameCount = 0, dark = qrCode.isDark(row, col);
+          for(var r=-1;r<=1;r++){
+            if(row+r < 0 || moduleCount <= row+r) continue;
+            for(var c=-1;c<=1;c++){
+              if(col+c < 0 || moduleCount <= col+c) continue;
+              if(r == 0 && c == 0) continue;
+              if(dark == qrCode.isDark(row+r, col+c)) sameCount++;
+            }
+          }
+          if(sameCount > 5) lostPoint += (3 + sameCount - 5);
+        }
+        for(var row=0;row<moduleCount-1;row++) for(var col=0;col<moduleCount-1;col++){
+          var count = 0;
+          if(qrCode.isDark(row, col)) count++;
+          if(qrCode.isDark(row+1, col)) count++;
+          if(qrCode.isDark(row, col+1)) count++;
+          if(qrCode.isDark(row+1, col+1)) count++;
+          if(count == 0 || count == 4) lostPoint += 3;
+        }
+        for(var row=0;row<moduleCount;row++) for(var col=0;col<moduleCount-6;col++)
+          if(qrCode.isDark(row,col) && !qrCode.isDark(row,col+1) && qrCode.isDark(row,col+2) && qrCode.isDark(row,col+3) && qrCode.isDark(row,col+4) && !qrCode.isDark(row,col+5) && qrCode.isDark(row,col+6)) lostPoint += 40;
+        for(var col=0;col<moduleCount;col++) for(var row=0;row<moduleCount-6;row++)
+          if(qrCode.isDark(row,col) && !qrCode.isDark(row+1,col) && qrCode.isDark(row+2,col) && qrCode.isDark(row+3,col) && qrCode.isDark(row+4,col) && !qrCode.isDark(row+5,col) && qrCode.isDark(row+6,col)) lostPoint += 40;
+        var darkCount = 0;
+        for(var col=0;col<moduleCount;col++) for(var row=0;row<moduleCount;row++) if(qrCode.isDark(row,col)) darkCount++;
+        var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+        lostPoint += ratio * 10;
+        return lostPoint;
+      }
+    };
+
+    return {
+      create: function(text, errLevel){
+        var ec = (errLevel == 'L') ? QRErrorCorrectLevel.L : (errLevel == 'Q') ? QRErrorCorrectLevel.Q : (errLevel == 'H') ? QRErrorCorrectLevel.H : QRErrorCorrectLevel.M;
+        var qr = new QRCode(-1, ec);
+        qr.addData(text);
+        qr.make();
+        var count = qr.getModuleCount();
+        var matrix = [];
+        for(var r=0;r<count;r++){
+          var row = [];
+          for(var c=0;c<count;c++) row.push(qr.isDark(r, c) ? 1 : 0);
+          matrix.push(row);
+        }
+        return matrix;
+      }
+    };
+  })();
+
+  // ============================================================
+  // 存储键
+  // ============================================================
+  const K = {
+    INV: 'inv_v12', HIS: 'his_v12', WX: 'wx_v12', ALIPAY: 'alipay_v12',
+    SEQ: 'seq_v12', NOTE: 'note_v12', CATS: 'cats_v12',
+    RECEIPT: 'receipt_v12', BRAND: 'brand_v12', GIFTS: 'gifts_v12',
+    ADMIN_ORDER: 'admin_order_v12',
+    THEME: 'theme_v12',
+    HELD: 'held_v12',
+    ORDER_DAY: 'order_day_v12'
+  };
+  const DEFAULT_NOTICE = '1. 请确认商品信息后再下单\n2. 下单后请及时完成支付\n3. 虚拟商品一经售出不退不换\n4. 如有疑问请联系摊主';
+  const DEFAULT_RECEIPT = {
+    shopName: '我的小店', title: '销售小票',
+    stallNo: '', stallName: '',
+    footer: '谢谢惠顾，欢迎下次光临！',
+    width: '48', extra: '',
+    logo: null, logoEnable: false, logoWidth: 120,
+    logoBottom: null, logoBottomEnable: false, logoBottomWidth: 120,
+    qrEnable: false, qrSize: 140,
+    fontFamily: "'SF Mono', Consolas, monospace",
+    titleAlign: 'center', titleSize: 2, titleBold: true,
+    bodySize: 1, dividerStyle: 'dash', feedLines: 2
+  };
+  const DEFAULT_BRAND = {
+    text: '库存下单',
+    bg: null,
+    printIcon: null, printIconSize: 24,
+    exportIcon: null, exportIconSize: 24
+  };
+
+  // 状态
+  let inventory = [];
+  let cart = [];
+  let history = [];
+  let giftRules = [];
+  let heldOrders = [];
+  let wxQr = null, alipayQr = null;
+  let orderSeq = 0;
+  let notice = DEFAULT_NOTICE;
+  let categories = [];
+  let activeShopCat = '全部';
+  let activeStockCat = '全部';
+  let pendingBill = null;
+  let addImgData = null;
+  let receiptCfg = JSON.parse(JSON.stringify(DEFAULT_RECEIPT));
+  let brandCfg = JSON.parse(JSON.stringify(DEFAULT_BRAND));
+
+  let btDevice = null;
+  let btCharacteristic = null;
+  let btConnected = false;
+
+  // 工具
+  function $(id){ return document.getElementById(id); }
+  function toast(msg, ms){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._tid);
+    t._tid = setTimeout(()=>t.classList.remove('show'), ms||2000);
+  }
+  function esc(s){
+    const d = document.createElement('div');
+    d.textContent = s == null ? '' : s;
+    return d.innerHTML;
+  }
+  function money(n){ return '¥' + Number(n||0).toFixed(2); }
+  function uid(){ return Date.now() + '-' + Math.random().toString(36).slice(2,8); }
+  function todayKey(){
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function genOrderNo(){
+    const today = todayKey();
+    const last = localStorage.getItem(K.ORDER_DAY) || '';
+    if(last !== today){
+      orderSeq = 0;
+      localStorage.setItem(K.ORDER_DAY, today);
+    }
+    orderSeq++;
+    saveSeq();
+    return String(orderSeq).padStart(2, '0');
+  }
+  function allCats(){
+    const s = new Set(categories);
+    inventory.forEach(i => { const c=(i.cat||'').trim(); if(c) s.add(c); });
+    return Array.from(s).sort();
+  }
+  function nextProductName(){
+    let i = 1;
+    while(inventory.some(p => p.name === '商品' + i)) i++;
+    return '商品' + i;
+  }
+  function nextTypeName(){
+    let i = 1;
+    while(categories.includes('类型' + i)) i++;
+    return '类型' + i;
+  }
+
+  // 存储
+  function saveInv(){ try{ localStorage.setItem(K.INV, JSON.stringify(inventory)); }catch(e){ toast('保存失败，存储空间可能已满'); } }
+  function saveHis(){ try{ localStorage.setItem(K.HIS, JSON.stringify(history)); }catch(e){ toast('保存失败'); } }
+  function saveQr(){
+    try {
+      if(wxQr) localStorage.setItem(K.WX, wxQr); else localStorage.removeItem(K.WX);
+      if(alipayQr) localStorage.setItem(K.ALIPAY, alipayQr); else localStorage.removeItem(K.ALIPAY);
+    }catch(e){ toast('保存失败，存储空间可能已满'); }
+  }
+  function saveSeq(){ try{ localStorage.setItem(K.SEQ, String(orderSeq)); }catch(e){} }
+  function saveNote(){ try{ localStorage.setItem(K.NOTE, notice); }catch(e){} }
+  function saveCats(){ try{ localStorage.setItem(K.CATS, JSON.stringify(categories)); }catch(e){} }
+  function saveReceipt(){ try{ localStorage.setItem(K.RECEIPT, JSON.stringify(receiptCfg)); }catch(e){ toast('保存失败，图片可能太大'); } }
+  function saveBrand(){ try{ localStorage.setItem(K.BRAND, JSON.stringify(brandCfg)); }catch(e){} }
+  function saveGifts(){ try{ localStorage.setItem(K.GIFTS, JSON.stringify(giftRules)); }catch(e){} }
+  function saveHeld(){ try{ localStorage.setItem(K.HELD, JSON.stringify(heldOrders)); }catch(e){} }
+
+  function loadAll(){
+    try {
+      const inv = localStorage.getItem(K.INV); if(inv) inventory = JSON.parse(inv);
+      const his = localStorage.getItem(K.HIS); if(his) history = JSON.parse(his);
+      const g = localStorage.getItem(K.GIFTS); if(g) giftRules = JSON.parse(g);
+      const h = localStorage.getItem(K.HELD); if(h) heldOrders = JSON.parse(h);
+      wxQr = localStorage.getItem(K.WX) || null;
+      alipayQr = localStorage.getItem(K.ALIPAY) || null;
+      const s = localStorage.getItem(K.SEQ); if(s) orderSeq = parseInt(s,10)||0;
+      const n = localStorage.getItem(K.NOTE); if(n !== null) notice = n;
+      const c = localStorage.getItem(K.CATS); if(c) categories = JSON.parse(c);
+      const r = localStorage.getItem(K.RECEIPT); if(r) receiptCfg = { ...DEFAULT_RECEIPT, ...JSON.parse(r) };
+      const b = localStorage.getItem(K.BRAND); if(b) brandCfg = { ...DEFAULT_BRAND, ...JSON.parse(b) };
+      inventory.forEach(i => { const cc=(i.cat||'').trim(); if(cc && !categories.includes(cc)) categories.push(cc); });
+    }catch(e){ console.error('load fail', e); }
+  }
+
+  function initDemo(){
+    if(inventory.length===0 && history.length===0 && !localStorage.getItem(K.INV)){
+      inventory = [
+        {id:uid(), name:'商品1', cat:'类型1', price:12.5, stock:20, img:null, limitPerOrder:0},
+        {id:uid(), name:'商品2', cat:'类型1', price:25, stock:8, img:null, limitPerOrder:0},
+        {id:uid(), name:'商品3', cat:'类型2', price:18, stock:3, img:null, limitPerOrder:0},
+        {id:uid(), name:'商品4', cat:'类型2', price:32, stock:12, img:null, limitPerOrder:0}
+      ];
+      categories = ['类型1','类型2'];
+      saveInv(); saveCats();
+    }
+  }
+
+  // 主题色
+  function applyTheme(theme){
+    theme = theme || 'blue';
+    document.body.classList.remove('theme-red','theme-yellow','theme-green');
+    if(theme !== 'blue') document.body.classList.add('theme-' + theme);
+    localStorage.setItem(K.THEME, theme);
+    document.querySelectorAll('.theme-btn').forEach(b=>{
+      const isActive = b.getAttribute('data-theme') === theme;
+      b.style.outline = isActive ? '3px solid #0f172a' : 'none';
+      b.style.outlineOffset = '2px';
+    });
+  }
+  document.querySelectorAll('.theme-btn').forEach(b=>{
+    b.addEventListener('click', ()=>applyTheme(b.getAttribute('data-theme')));
+  });
+
+  // 标签页
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      const name = tab.getAttribute('data-tab');
+      $('page-'+name).classList.add('active');
+      if(name==='shop') renderShop();
+      else if(name==='admin') renderAdmin();
+      updateBottomBar();
+    });
+  });
+
+  document.querySelectorAll('[data-toggle]').forEach(h=>{
+    h.addEventListener('click', (e)=>{
+      if(h._dragging) return;
+      const grp = $(h.getAttribute('data-toggle'));
+      if(grp) grp.classList.toggle('open');
+    });
+  });
+
+  document.querySelectorAll('#stockSubTabs .sub-tab').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      document.querySelectorAll('#stockSubTabs .sub-tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      const target = t.getAttribute('data-sub');
+      ['list','add','cat','qr'].forEach(n=>{
+        $('sub-'+n).style.display = (n===target) ? 'block' : 'none';
+      });
+    });
+  });
+
+  document.querySelectorAll('.format-toggle').forEach(group=>{
+    group.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        group.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        updateReceiptPreview();
+      });
+    });
+  });
+
+  // 应用顶栏
+  function applyBrand(){
+    const iconEl = $('brandIcon');
+    const textEl = $('brandText');
+    const topbar = $('topbar');
+
+    if(brandCfg.bg){
+      topbar.style.backgroundImage = `url(${brandCfg.bg})`;
+      topbar.classList.add('has-bg');
+      iconEl.style.display = 'none';
+    } else {
+      topbar.style.backgroundImage = '';
+      topbar.classList.remove('has-bg');
+      iconEl.style.display = 'inline';
+      iconEl.textContent = '📦';
+    }
+
+    textEl.textContent = brandCfg.text || '';
+
+    applyIconTo($('printIconInner'), brandCfg.printIcon, brandCfg.printIconSize || 24, '🖨');
+    applyIconTo($('exportIconInner'), brandCfg.exportIcon, brandCfg.exportIconSize || 24, '📥');
+  }
+  function applyIconTo(el, data, size, fallback){
+    if(!el) return;
+    if(data){
+      el.innerHTML = `<img src="${data}" style="width:${size}px;height:${size}px;object-fit:contain;">`;
+    } else {
+      el.innerHTML = '';
+      el.textContent = fallback;
+      el.style.fontSize = size + 'px';
+    }
+  }
+
+  // ========== 库存 ==========
+  function renderStock(){
+    const cats = ['全部', ...allCats()];
+    if(!cats.includes(activeStockCat)) activeStockCat = '全部';
+    $('stockCatFilter').innerHTML = cats.map(c=>
+      `<div class="cat-chip ${activeStockCat===c?'active':''}" data-c="${esc(c)}">${esc(c)}</div>`
+    ).join('');
+    $('stockCatFilter').querySelectorAll('.cat-chip').forEach(el=>{
+      el.addEventListener('click', ()=>{ activeStockCat = el.getAttribute('data-c'); renderStock(); });
+    });
+
+    let list = inventory;
+    if(activeStockCat !== '全部') list = inventory.filter(i=>(i.cat||'').trim()===activeStockCat);
+
+    $('stockCountHint').textContent = inventory.length + ' 种';
+    if(!list.length){ $('stockList').innerHTML = '<div class="empty"><span class="big">📦</span>暂无商品</div>'; return; }
+    $('stockList').innerHTML = list.map(p=>{
+      const low = p.stock <= 3;
+      const img = p.img ? `<img src="${p.img}">` : `<div class="no-img">📦</div>`;
+      return `<div class="stock-item">
+        ${img}
+        <div class="info">
+          <div class="name">${esc(p.name)}</div>
+          <div class="meta">
+            ${p.cat?`<span>🏷 ${esc(p.cat)}</span>`:''}
+            <span>${money(p.price)}</span>
+          </div>
+        </div>
+        <div class="stock-num ${low?'low':''}">库存 ${p.stock}</div>
+        ${p.limitPerOrder > 0 ? `<div class="limit-num">限${p.limitPerOrder}件</div>` : ''}
+        <div class="item-btns">
+          <button class="small secondary" data-edit="${p.id}">编辑</button>
+          <button class="small red" data-del="${p.id}">删</button>
+        </div>
+      </div>`;
+    }).join('');
+    $('stockList').querySelectorAll('[data-edit]').forEach(b=>{
+      b.addEventListener('click', ()=>openEditModal(b.getAttribute('data-edit')));
+    });
+    $('stockList').querySelectorAll('[data-del]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const id = b.getAttribute('data-del');
+        const p = inventory.find(x=>x.id===id);
+        if(!p) return;
+        if(!confirm(`删除「${p.name}」？`)) return;
+        inventory = inventory.filter(x=>x.id!==id);
+        saveInv(); renderStock(); renderShop(); renderGiftRules();
+        toast('已删除');
+      });
+    });
+  }
+
+  function bindAddImgInput(){
+    const input = $('addImgInput');
+    if(!input) return;
+    input.addEventListener('change', e=>{
+      const f = e.target.files[0]; if(!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        addImgData = ev.target.result;
+        $('addImgBox').innerHTML = `<img src="${addImgData}"><input type="file" accept="image/*" id="addImgInput">`;
+        bindAddImgInput();
+      };
+      r.readAsDataURL(f);
+    });
+  }
+  bindAddImgInput();
+
+  $('confirmAddBtn').addEventListener('click', ()=>{
+    const name = $('addName').value.trim() || nextProductName();
+    const cat = $('addCat').value.trim() || nextTypeName();
+    const price = parseFloat($('addPrice').value);
+    const stock = parseInt($('addStock').value,10);
+    const limitPerOrder = parseInt($('addLimit').value, 10) || 0;
+    if(isNaN(price)||price<=0) return toast('价格无效');
+    if(isNaN(stock)||stock<0) return toast('库存无效');
+    inventory.push({id:uid(), name, cat, price, stock, img:addImgData, limitPerOrder});
+    if(cat && !categories.includes(cat)){ categories.push(cat); saveCats(); }
+    saveInv();
+    $('addName').value=''; $('addCat').value=''; $('addPrice').value=''; $('addStock').value='10'; $('addLimit').value='0';
+    addImgData = null;
+    $('addImgBox').innerHTML = '<span class="ph">📷<br>图片</span><input type="file" accept="image/*" id="addImgInput">';
+    bindAddImgInput();
+    toast('已添加：'+name);
+    renderStock(); renderShop(); renderGiftRules();
+    $('addName').value = nextProductName();
+    $('addCat').value = nextTypeName();
+  });
+
+  $('addCatBtn').addEventListener('click', ()=>{
+    const name = $('newCatName').value.trim();
+    if(!name) return toast('请输入类型名');
+    if(allCats().includes(name)) return toast('该类型已存在');
+    categories.push(name);
+    saveCats(); $('newCatName').value='';
+    renderCatManage(); renderStock();
+    toast('已添加类型');
+  });
+
+  function renderCatManage(){
+    const cats = allCats();
+    if(!cats.length){ $('catManageList').innerHTML = '<div class="empty" style="padding:14px;">暂无类型</div>'; return; }
+    $('catManageList').innerHTML = cats.map(c=>{
+      const cnt = inventory.filter(i=>(i.cat||'').trim()===c).length;
+      return `<div class="cat-manage-row">
+        <div class="cn"><b>${esc(c)}</b> <small>${cnt} 件</small></div>
+        <button class="small secondary" data-rename="${esc(c)}">改名</button>
+        <button class="small red" data-del="${esc(c)}">删</button>
+      </div>`;
+    }).join('');
+    $('catManageList').querySelectorAll('[data-rename]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const old = b.getAttribute('data-rename');
+        const nv = prompt('重命名为：', old);
+        if(nv === null) return;
+        const t = nv.trim();
+        if(!t || t === old) return;
+        if(allCats().includes(t)) return toast('已存在');
+        const idx = categories.indexOf(old);
+        if(idx>-1) categories[idx] = t;
+        inventory.forEach(i=>{ if((i.cat||'').trim()===old) i.cat = t; });
+        if(activeShopCat===old) activeShopCat=t;
+        if(activeStockCat===old) activeStockCat=t;
+        saveCats(); saveInv(); renderCatManage(); renderStock(); renderShop();
+        toast('已改名');
+      });
+    });
+    $('catManageList').querySelectorAll('[data-del]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const c = b.getAttribute('data-del');
+        const cnt = inventory.filter(i=>(i.cat||'').trim()===c).length;
+        if(cnt>0){
+          if(!confirm(`类型「${c}」有 ${cnt} 件商品，删除后商品变"未分类"，确定？`)) return;
+          inventory.forEach(i=>{ if((i.cat||'').trim()===c) i.cat=''; });
+        } else {
+          if(!confirm(`删除类型「${c}」？`)) return;
+        }
+        categories = categories.filter(x=>x!==c);
+        if(activeShopCat===c) activeShopCat='全部';
+        if(activeStockCat===c) activeStockCat='全部';
+        saveCats(); saveInv(); renderCatManage(); renderStock(); renderShop();
+        toast('已删除');
+      });
+    });
+  }
+
+  function bindQrInputs(){
+    const wIn = $('wechatInput');
+    const aIn = $('alipayInput');
+    if(wIn) wIn.addEventListener('change', e=>{
+      const f = e.target.files[0]; if(!f) return;
+      const r = new FileReader();
+      r.onload = ev => { wxQr = ev.target.result; saveQr(); renderQrBoxes(); toast('已上传微信收款码'); };
+      r.readAsDataURL(f);
+    });
+    if(aIn) aIn.addEventListener('change', e=>{
+      const f = e.target.files[0]; if(!f) return;
+      const r = new FileReader();
+      r.onload = ev => { alipayQr = ev.target.result; saveQr(); renderQrBoxes(); toast('已上传支付宝收款码'); };
+      r.readAsDataURL(f);
+    });
+  }
+
+  $('removeWechatBtn').addEventListener('click', ()=>{ wxQr=null; saveQr(); renderQrBoxes(); toast('已移除'); });
+  $('removeAlipayBtn').addEventListener('click', ()=>{ alipayQr=null; saveQr(); renderQrBoxes(); toast('已移除'); });
+
+  function renderQrBoxes(){
+    $('wechatBox').innerHTML = wxQr
+      ? `<img src="${wxQr}"><input type="file" accept="image/*" id="wechatInput">`
+      : `<span class="ph">微信码</span><input type="file" accept="image/*" id="wechatInput">`;
+    $('alipayBox').innerHTML = alipayQr
+      ? `<img src="${alipayQr}"><input type="file" accept="image/*" id="alipayInput">`
+      : `<span class="ph">支付宝码</span><input type="file" accept="image/*" id="alipayInput">`;
+    bindQrInputs();
+  }
+
+  function openEditModal(id){
+    const p = inventory.find(x=>x.id===id);
+    if(!p) return;
+    let img = p.img || null;
+    const modal = openModal(`
+      <h3>✏️ 编辑商品</h3>
+      <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;">
+        <label class="img-input-box" id="editImgBox">
+          ${img?`<img src="${img}">`:'<span class="ph">📷</span>'}
+          <input type="file" accept="image/*" id="editImgInput">
+        </label>
+        <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+          <input type="text" id="eName" value="${esc(p.name)}" placeholder="名称">
+          <input type="text" id="eCat" value="${esc(p.cat||'')}" placeholder="类型" list="catList">
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <div style="flex:1;">
+          <label>价格（元）</label>
+          <input type="number" id="ePrice" value="${p.price}" step="0.01" placeholder="例如 12.50">
+        </div>
+        <div style="flex:1;">
+          <label>库存（件）</label>
+          <input type="number" id="eStock" value="${p.stock}" step="1" placeholder="例如 10">
+        </div>
+        <div style="flex:1;">
+          <label>单笔限购（0=不限）</label>
+          <input type="number" id="eLimit" value="${p.limitPerOrder||0}" step="1" min="0">
+        </div>
+      </div>
+      <div class="m-actions">
+        <button class="secondary" id="eCancel">取消</button>
+        <button class="blue" id="eSave">保存</button>
+      </div>
+    `);
+    function bindEditImg(){
+      const ei = $('editImgInput');
+      if(!ei) return;
+      ei.addEventListener('change', e=>{
+        const f = e.target.files[0]; if(!f) return;
+        const r = new FileReader();
+        r.onload = ev => {
+          img = ev.target.result;
+          $('editImgBox').innerHTML = `<img src="${img}"><input type="file" accept="image/*" id="editImgInput">`;
+          bindEditImg();
+        };
+        r.readAsDataURL(f);
+      });
+    }
+    bindEditImg();
+    $('eCancel').addEventListener('click', modal.close);
+    $('eSave').addEventListener('click', ()=>{
+      const name = $('eName').value.trim();
+      const cat = $('eCat').value.trim();
+      const price = parseFloat($('ePrice').value);
+      const stock = parseInt($('eStock').value,10);
+      const limit = parseInt($('eLimit').value,10) || 0;
+      if(!name) return toast('名称不能为空');
+      if(isNaN(price)||price<=0) return toast('价格无效');
+      if(isNaN(stock)||stock<0) return toast('库存无效');
+      p.name = name; p.cat = cat; p.price = price; p.stock = stock; p.img = img; p.limitPerOrder = limit;
+      if(cat && !categories.includes(cat)){ categories.push(cat); saveCats(); }
+      saveInv();
+      modal.close();
+      renderStock(); renderShop(); renderGiftRules();
+      toast('已保存');
+    });
+  }
+
+  // ========== 满赠 ==========
+  function refreshGiftCatSelect(){
+    const sel = $('giftScopeCat');
+    if(!sel) return;
+    sel.innerHTML = allCats().map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  }
+
+  function renderGiftRules(){
+    const sel = $('giftProduct');
+    if(!sel) return;
+    sel.innerHTML = '<option value="">-- 选赠品 --</option>' +
+      inventory.map(p=>`<option value="${p.id}">${esc(p.name)} (库存${p.stock})</option>`).join('');
+    refreshGiftCatSelect();
+
+    const list = $('giftRuleList');
+    if(!list) return;
+    if(!giftRules.length){
+      list.innerHTML = '<div class="empty" style="padding:14px;">暂无规则</div>';
+      return;
+    }
+    list.innerHTML = giftRules.map((r, idx)=>{
+      const p = inventory.find(x=>x.id === r.giftProductId);
+      let scopeText = '全部类型';
+      if(r.scope === 'only') scopeText = `仅「${esc(r.scopeCat)}」`;
+      else if(r.scope === 'exclude') scopeText = `除「${esc(r.scopeCat)}」外`;
+      return `<div class="cat-manage-row">
+        <div class="cn">
+          <b>${scopeText}</b> 满 <b>¥${r.threshold.toFixed(2)}</b> 赠 ${esc(p ? p.name : '(已删除)')} × ${r.giftQty}
+        </div>
+        <button class="small red" data-del-gift="${idx}">删</button>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('[data-del-gift]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const i = +b.getAttribute('data-del-gift');
+        giftRules.splice(i, 1);
+        saveGifts(); renderGiftRules(); toast('已删除');
+      });
+    });
+  }
+
+  $('giftScope').addEventListener('change', ()=>{
+    $('giftScopeCatWrap').style.display = ($('giftScope').value === 'all') ? 'none' : 'block';
+  });
+
+  $('addGiftRuleBtn').addEventListener('click', ()=>{
+    const threshold = parseFloat($('giftThreshold').value);
+    const giftProductId = $('giftProduct').value;
+    const giftQty = parseInt($('giftQty').value, 10);
+    const scope = $('giftScope').value;
+    const scopeCat = (scope === 'all') ? '' : $('giftScopeCat').value;
+    if(isNaN(threshold) || threshold <= 0) return toast('请输入有效金额');
+    if(!giftProductId) return toast('请选择赠品');
+    if(isNaN(giftQty) || giftQty <= 0) return toast('请输入数量');
+    if(scope !== 'all' && !scopeCat) return toast('请选择类型');
+    giftRules.push({ threshold, giftProductId, giftQty, scope, scopeCat });
+    saveGifts(); renderGiftRules();
+    $('giftThreshold').value = '';
+    $('giftQty').value = '1';
+    toast('已添加满赠规则');
+  });
+
+  // 计算符合满赠范围的金额
+  function calcGiftEligibleTotal(rule, items){
+    let sum = 0;
+    items.forEach(it=>{
+      if(it.isGift) return;
+      const cat = (it.cat || '').trim();
+      if(rule.scope === 'only'){
+        if(cat === rule.scopeCat) sum += it.price * it.qty;
+      } else if(rule.scope === 'exclude'){
+        if(cat !== rule.scopeCat) sum += it.price * it.qty;
+      } else {
+        sum += it.price * it.qty;
+      }
+    });
+    return sum;
+  }
+
+  // ========== 保留订单 ==========
+  function renderHeldOrders(){
+    const list = $('heldOrderList');
+    const hint = $('heldCountHint');
+    if(!list) return;
+    if(hint) hint.textContent = heldOrders.length ? heldOrders.length + ' 单' : '';
+    if(!heldOrders.length){
+      list.innerHTML = '<div class="empty" style="padding:14px;">暂无保留订单</div>';
+      return;
+    }
+    list.innerHTML = heldOrders.map((s, idx)=>{
+      const items = s.bill.items.map(i=>`${i.name}×${i.qty}${i.isGift?'🎁':''}`).join(' · ');
+      const time = new Date(s.savedAt).toLocaleString('zh-CN');
+      const stall = (s.stallName||s.stallNo) ? ' · ' + esc(s.stallName||'') + ' ' + esc(s.stallNo||'') : '';
+      return `<div class="held-row">
+        <div class="info">
+          <b>#${esc(s.bill.orderNo)}</b> · ${money(s.bill.total)}<br>
+          <small>${esc(items)}</small><br>
+          <small>${time}${stall}</small>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="small green" data-restore="${idx}">恢复</button>
+          <button class="small red" data-drop="${idx}">删除</button>
+        </div>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('[data-restore]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const i = +b.getAttribute('data-restore');
+        const s = heldOrders[i];
+        if(!s) return;
+        pendingBill = s.bill;
+        renderBillPanel();
+        $('billPanel').classList.add('show');
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+        document.querySelector('.tab[data-tab="shop"]').classList.add('active');
+        $('page-shop').classList.add('active');
+        heldOrders.splice(i, 1);
+        saveHeld(); renderHeldOrders();
+        toast('已恢复订单');
+      });
+    });
+    list.querySelectorAll('[data-drop]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const i = +b.getAttribute('data-drop');
+        if(!confirm('确定删除这条保留订单？')) return;
+        heldOrders.splice(i, 1);
+        saveHeld(); renderHeldOrders();
+        toast('已删除');
+      });
+    });
+  }
+
+  // ========== 选购 ==========
+  function renderShop(){
+    const cats = ['全部', ...allCats()];
+    if(!cats.includes(activeShopCat)) activeShopCat = '全部';
+    $('shopCatFilter').innerHTML = cats.map(c=>
+      `<div class="cat-chip ${activeShopCat===c?'active':''}" data-c="${esc(c)}">${esc(c)}</div>`
+    ).join('');
+    $('shopCatFilter').querySelectorAll('.cat-chip').forEach(el=>{
+      el.addEventListener('click', ()=>{ activeShopCat = el.getAttribute('data-c'); renderShop(); });
+    });
+
+    $('noticeDisplay').innerHTML = notice && notice.trim()
+      ? `<div class="n-title">📢 购前须知</div>${esc(notice)}`
+      : '<span style="color:#b45309;">（暂无购前须知）</span>';
+
+    let list = inventory;
+    if(activeShopCat !== '全部') list = inventory.filter(i=>(i.cat||'').trim()===activeShopCat);
+    if(!list.length){
+      $('productGrid').innerHTML = '<div class="empty" style="grid-column:1/-1;"><span class="big">🛍</span>暂无商品</div>';
+      return;
+    }
+    $('productGrid').innerHTML = list.map(p=>{
+      const soldout = p.stock <= 0;
+      const inCart = cart.find(c=>c.productId===p.id);
+      const qty = inCart ? inCart.qty : 0;
+      const thumb = p.img
+        ? `<img class="thumb" src="${p.img}" alt="">`
+        : `<div class="thumb-placeholder">📦</div>`;
+      const limitTag = p.limitPerOrder > 0 ? `<div class="limit-tag">限${p.limitPerOrder}件</div>` : '';
+      return `<div class="product-card ${soldout?'soldout':''}" data-id="${p.id}">
+        ${thumb}
+        ${p.cat?`<div class="p-cat">${esc(p.cat)}</div>`:''}
+        ${qty>0?`<div class="qty-badge">${qty}</div>`:''}
+        ${limitTag}
+        ${soldout?`<div class="soldout-tag">已售罄</div>`:''}
+        <div class="p-info">
+          <div class="p-name">${esc(p.name)}</div>
+          <div class="p-price">${money(p.price)}</div>
+          <div class="p-stock ${p.stock<=3?'low':''}">库存 ${p.stock}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // 点击商品卡片：直接 +1
+    $('productGrid').querySelectorAll('.product-card').forEach(card=>{
+      card.addEventListener('click', ()=>{
+        const id = card.getAttribute('data-id');
+        const p = inventory.find(x=>x.id===id);
+        if(!p) return;
+        if(p.stock <= 0) return toast('该商品已售罄');
+        addOneToCart(p);
+      });
+    });
+  }
+
+  function addOneToCart(p){
+    const existing = cart.find(c=>c.productId===p.id);
+    const cur = existing ? existing.qty : 0;
+    let max = p.stock;
+    if(p.limitPerOrder > 0) max = Math.min(max, p.limitPerOrder);
+    if(cur >= max){
+      return toast(p.limitPerOrder > 0 ? `单笔限购 ${p.limitPerOrder} 件` : '已达库存上限');
+    }
+    if(existing) existing.qty++;
+    else cart.push({productId:p.id, qty:1});
+    renderShop(); updateBottomBar();
+    toast(`已加入：${p.name}`, 1000);
+  }
+
+  function updateBottomBar(){
+    const totalQty = cart.reduce((s,c)=>s+c.qty,0);
+    const totalAmt = cart.reduce((s,c)=>{
+      const p = inventory.find(x=>x.id===c.productId);
+      return s + (p?p.price*c.qty:0);
+    },0);
+    if(totalQty > 0){
+      $('bottomBar').classList.add('show');
+      $('cartCountText').textContent = `已选 ${totalQty} 件`;
+      $('cartTotalText').textContent = money(totalAmt);
+    } else {
+      $('bottomBar').classList.remove('show');
+    }
+  }
+
+  $('viewCartBtn').addEventListener('click', ()=>renderCartPanel());
+  $('closeCartBtn').addEventListener('click', ()=>{ $('cartPanel').classList.remove('show'); });
+  $('cartPanel').addEventListener('click', e=>{
+    if(e.target === $('cartPanel')) $('cartPanel').classList.remove('show');
+  });
+
+  function renderCartPanel(){
+    if(!cart.length){
+      $('cartList').innerHTML = '<div class="empty">购物车是空的</div>';
+    } else {
+      $('cartList').innerHTML = cart.map((c,idx)=>{
+        const p = inventory.find(x=>x.id===c.productId);
+        if(!p) return '';
+        return `<div class="cart-row">
+          <div class="c-info">
+            <div class="c-name">${esc(p.name)}${p.limitPerOrder>0?` <span style="color:#f59e0b;font-size:0.7rem;">限${p.limitPerOrder}</span>`:''}</div>
+            <div class="c-price">${money(p.price)} × ${c.qty} = <b>${money(p.price*c.qty)}</b></div>
+          </div>
+          <div class="c-qty">
+            <button class="qty-btn" data-dec="${idx}">−</button>
+            <span class="qty-num clickable" data-edit-qty="${idx}" title="点击修改">${c.qty}</span>
+            <button class="qty-btn" data-inc="${idx}">+</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    $('cartPanel').classList.add('show');
+
+    $('cartList').querySelectorAll('[data-inc]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const idx = +b.getAttribute('data-inc');
+        const c = cart[idx];
+        const p = inventory.find(x=>x.id===c.productId);
+        let maxAllow = p.stock;
+        if(p.limitPerOrder > 0) maxAllow = Math.min(p.stock, p.limitPerOrder);
+        if(c.qty >= maxAllow){
+          toast(p.limitPerOrder > 0 ? `限购 ${p.limitPerOrder} 件` : '已达库存上限');
+          return;
+        }
+        c.qty++;
+        renderCartPanel(); renderShop(); updateBottomBar();
+      });
+    });
+    $('cartList').querySelectorAll('[data-dec]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const idx = +b.getAttribute('data-dec');
+        cart[idx].qty--;
+        if(cart[idx].qty <= 0) cart.splice(idx,1);
+        renderCartPanel(); renderShop(); updateBottomBar();
+      });
+    });
+    $('cartList').querySelectorAll('[data-edit-qty]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const idx = +el.getAttribute('data-edit-qty');
+        openQtyEdit(idx);
+      });
+    });
+  }
+
+  function openQtyEdit(idx){
+    const c = cart[idx];
+    if(!c) return;
+    const p = inventory.find(x=>x.id===c.productId);
+    if(!p) return;
+    let maxAllow = p.stock;
+    if(p.limitPerOrder > 0) maxAllow = Math.min(p.stock, p.limitPerOrder);
+
+    const m = openModal(`
+      <h3>修改数量 · ${esc(p.name)}</h3>
+      <div style="font-size:0.82rem; color:#64748b; margin-bottom:10px;">
+        单价 ${money(p.price)} · 库存 ${p.stock}${p.limitPerOrder>0?' · 限购'+p.limitPerOrder:''}
+      </div>
+      <label>数量（1 - ${maxAllow}）</label>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <button class="qty-btn" id="qeDec" style="width:40px;height:40px;font-size:1.2rem;">−</button>
+        <input type="number" id="qeQty" value="${c.qty}" min="1" max="${maxAllow}" style="text-align:center; font-size:1.2rem; font-weight:600;">
+        <button class="qty-btn" id="qeInc" style="width:40px;height:40px;font-size:1.2rem;">+</button>
+      </div>
+      <div class="m-actions">
+        <button class="secondary" id="qeCancel">取消</button>
+        <button class="red" id="qeRemove">移除</button>
+        <button class="green" id="qeSave">确定</button>
+      </div>
+    `);
+    const qi = $('qeQty');
+    $('qeDec').addEventListener('click', ()=>{
+      let v = parseInt(qi.value,10) || 1;
+      qi.value = Math.max(1, v - 1);
+    });
+    $('qeInc').addEventListener('click', ()=>{
+      let v = parseInt(qi.value,10) || 1;
+      qi.value = Math.min(maxAllow, v + 1);
+    });
+    $('qeCancel').addEventListener('click', m.close);
+    $('qeRemove').addEventListener('click', ()=>{
+      cart.splice(idx, 1);
+      m.close();
+      renderCartPanel(); renderShop(); updateBottomBar();
+      toast('已移除');
+    });
+    $('qeSave').addEventListener('click', ()=>{
+      let v = parseInt(qi.value,10) || 1;
+      if(v < 1) v = 1;
+      if(v > maxAllow) v = maxAllow;
+      c.qty = v;
+      m.close();
+      renderCartPanel(); renderShop(); updateBottomBar();
+      toast('已修改');
+    });
+  }
+
+  $('clearCartBtn').addEventListener('click', ()=>{
+    cart = [];
+    $('cartPanel').classList.remove('show');
+    renderShop(); updateBottomBar();
+    toast('已清空');
+  });
+
+  $('checkoutBtn').addEventListener('click', ()=>{
+    if(!cart.length) return toast('购物车是空的');
+    for(const c of cart){
+      const p = inventory.find(x=>x.id===c.productId);
+      if(!p) return toast('商品不存在');
+      if(p.stock < c.qty) return toast(`「${p.name}」库存不足`);
+      if(p.limitPerOrder > 0 && c.qty > p.limitPerOrder){
+        return toast(`「${p.name}」单笔限购 ${p.limitPerOrder} 件`);
+      }
+    }
+    const items = cart.map(c=>{
+      const p = inventory.find(x=>x.id===c.productId);
+      return {productId:p.id, name:p.name, price:p.price, qty:c.qty, cat:p.cat||''};
+    });
+    const total = items.reduce((s,i)=>s+i.price*i.qty,0);
+
+    // 满赠（按类型范围过滤金额）
+    const giftMsgs = [];
+    giftRules.forEach(rule=>{
+      const eligibleTotal = calcGiftEligibleTotal(rule, items);
+      if(eligibleTotal >= rule.threshold){
+        const gift = inventory.find(p=>p.id === rule.giftProductId);
+        if(!gift) return;
+        if(gift.stock < rule.giftQty){
+          toast(`赠品「${gift.name}」库存不足，跳过`, 2500);
+          return;
+        }
+        const already = items.find(i=>i.productId === gift.id && i.isGift);
+        if(already){
+          already.qty += rule.giftQty;
+        } else {
+          items.push({
+            productId: gift.id,
+            name: gift.name,
+            price: 0,
+            qty: rule.giftQty,
+            cat: gift.cat || '',
+            isGift: true
+          });
+        }
+        giftMsgs.push(gift.name + '×' + rule.giftQty);
+      }
+    });
+    if(giftMsgs.length) toast('🎁 已加赠：' + giftMsgs.join('、'), 2500);
+
+    pendingBill = {items, total, orderNo: genOrderNo()};
+    renderBillPanel();
+    $('printOptionRow').style.display = btConnected ? 'flex' : 'none';
+    $('billPanel').classList.add('show');
+  });
+
+  function renderBillPanel(){
+    if(!pendingBill) return;
+
+    // 摊位信息只读显示
+    const stallNo = receiptCfg.stallNo || '';
+    const stallName = receiptCfg.stallName || '';
+    const box = $('billStallDisplay');
+    const txt = $('billStallText');
+    if(stallNo || stallName){
+      box.style.display = 'block';
+      txt.textContent = (stallName + ' ' + stallNo).trim();
+    } else {
+      box.style.display = 'none';
+    }
+
+    const itemsHtml = pendingBill.items.map(i=>
+      `<div class="bill-item ${i.isGift?'gift':''}"><span>${esc(i.name)}${i.cat?` <span style="color:#94a3b8;font-size:0.78rem;">[${esc(i.cat)}]</span>`:''} × ${i.qty}${i.isGift?' <span style="color:#b45309;font-size:0.72rem;">🎁赠品</span>':''}</span><span>${money(i.price*i.qty)}</span></div>`
+    ).join('');
+    const noticeHtml = notice && notice.trim() ? `<div class="bill-notice">📢 ${esc(notice)}</div>` : '';
+    let qrHtml = '';
+    if(wxQr || alipayQr){
+      qrHtml = '<div class="qr-pay">';
+      if(wxQr) qrHtml += `<div class="q"><img src="${wxQr}"><span>微信支付</span></div>`;
+      if(alipayQr) qrHtml += `<div class="q"><img src="${alipayQr}"><span>支付宝</span></div>`;
+      qrHtml += '</div>';
+    } else {
+      qrHtml = '<div class="empty" style="padding:14px;">暂无收款码，请在后台-商品库存-收款码 上传</div>';
+    }
+    $('billContent').innerHTML = `
+      <div class="bill-no">#${pendingBill.orderNo}</div>
+      ${noticeHtml}
+      ${itemsHtml}
+      <div class="bill-total"><span>合计</span><span style="color:#ef4444;">${money(pendingBill.total)}</span></div>
+      ${qrHtml}
+    `;
+  }
+
+  $('closeBillBtn').addEventListener('click', ()=>{ $('billPanel').classList.remove('show'); });
+
+  $('holdBillBtn').addEventListener('click', ()=>{
+    if(!pendingBill) return;
+    heldOrders.push({
+      bill: JSON.parse(JSON.stringify(pendingBill)),
+      stallNo: receiptCfg.stallNo || '',
+      stallName: receiptCfg.stallName || '',
+      savedAt: Date.now()
+    });
+    saveHeld();
+    cart = [];
+    pendingBill = null;
+    $('billPanel').classList.remove('show');
+    renderShop(); updateBottomBar(); renderHeldOrders();
+    toast('已保留，可在后台恢复');
+  });
+
+  $('payDoneBtn').addEventListener('click', async ()=>{
+    if(!pendingBill) return;
+    for(const i of pendingBill.items){
+      const p = inventory.find(x=>x.id===i.productId);
+      if(!p) return toast('商品不存在');
+      if(p.stock < i.qty) return toast(`「${p.name}」库存不足`);
+    }
+    pendingBill.items.forEach(i=>{
+      const p = inventory.find(x=>x.id===i.productId);
+      if(p) p.stock -= i.qty;
+    });
+    const now = new Date();
+    const order = {
+      orderNo: pendingBill.orderNo,
+      items: pendingBill.items.map(i=>({...i})),
+      total: pendingBill.total,
+      timestamp: now.getTime(),
+      dateKey: todayKey(),
+      timeStr: now.toLocaleString('zh-CN'),
+      stallNo: receiptCfg.stallNo || '',
+      stallName: receiptCfg.stallName || ''
+    };
+    history.unshift(order);
+    saveInv(); saveHis();
+
+    const autoPrint = $('autoPrintCheck').checked;
+    cart = [];
+    pendingBill = null;
+    $('billPanel').classList.remove('show');
+    renderShop(); renderStock(); renderOrders(); updateBottomBar();
+    toast('✅ 支付成功', 2000);
+
+    if(autoPrint && btConnected){
+      setTimeout(()=>{ printReceipt(order); }, 300);
+    } else if(autoPrint && !btConnected){
+      toast('支付成功，但小票机未连接', 2500);
+    }
+  });
+
+  $('previewBillBtn').addEventListener('click', ()=>{
+    if(!pendingBill) return toast('没有待支付账单');
+    showReceiptPreview({
+      orderNo: pendingBill.orderNo,
+      items: pendingBill.items,
+      total: pendingBill.total,
+      timeStr: new Date().toLocaleString('zh-CN'),
+      stallNo: receiptCfg.stallNo || '',
+      stallName: receiptCfg.stallName || ''
+    });
+  });
+  $('printBillBtn').addEventListener('click', ()=>{
+    if(!pendingBill) return toast('没有待支付账单');
+    if(!btConnected) return toast('请先在后台连接小票机', 2500);
+    printReceipt({
+      orderNo: pendingBill.orderNo,
+      items: pendingBill.items,
+      total: pendingBill.total,
+      timeStr: new Date().toLocaleString('zh-CN'),
+      stallNo: receiptCfg.stallNo || '',
+      stallName: receiptCfg.stallName || ''
+    });
+  });
+
+  // 购前须知
+  $('noticeDisplay').addEventListener('dblclick', editNotice);
+  $('noticeDisplay').addEventListener('contextmenu', (e)=>{ e.preventDefault(); editNotice(); });
+
+  function editNotice(){
+    const m = openModal(`
+      <h3>✏️ 编辑购前须知</h3>
+      <textarea id="nText" style="min-height:140px; line-height:1.6;">${esc(notice)}</textarea>
+      <div class="m-actions">
+        <button class="secondary" id="nCancel">取消</button>
+        <button class="blue" id="nSave">保存</button>
+      </div>
+    `);
+    $('nCancel').addEventListener('click', m.close);
+    $('nSave').addEventListener('click', ()=>{
+      notice = $('nText').value;
+      saveNote(); m.close(); renderShop();
+      if(pendingBill) renderBillPanel();
+      toast('已保存');
+    });
+  }
+
+  // ========== 订单 ==========
+  function renderOrders(){
+    if(!$('statsDate').value) $('statsDate').value = todayKey();
+    updateStats();
+    renderHistory();
+  }
+  $('statsDate').addEventListener('change', updateStats);
+
+  function updateStats(){
+    const d = $('statsDate').value || todayKey();
+    const dayOrders = history.filter(o=>o.dateKey===d);
+    const rev = dayOrders.reduce((s,o)=>s+o.total,0);
+    const itm = dayOrders.reduce((s,o)=>s+o.items.reduce((a,i)=>a+(i.isGift?0:i.qty),0),0);
+    const tot = history.reduce((s,o)=>s+o.total,0);
+    $('stOrders').textContent = dayOrders.length;
+    $('stRevenue').textContent = money(rev);
+    $('stItems').textContent = itm;
+    $('stTotal').textContent = money(tot);
+  }
+
+  function renderHistory(){
+    if(!history.length){
+      $('historyList').innerHTML = '<div class="empty"><span class="big">📋</span>暂无订单</div>';
+      return;
+    }
+    $('historyList').innerHTML = history.slice(0,50).map((o,idx)=>{
+      const cnt = o.items.reduce((s,i)=>s+(i.isGift?0:i.qty),0);
+      const items = o.items.map(i=>`${i.name}×${i.qty}${i.isGift?'🎁':''}`).join(' · ');
+      const stall = (o.stallName||o.stallNo) ? ` · ${esc(o.stallName||'')} ${esc(o.stallNo||'')}` : '';
+      return `<div class="history-item">
+        <div class="h-top">
+          <span class="h-no">#${o.orderNo}</span>
+          <span class="h-amount">${money(o.total)}</span>
+        </div>
+        <div class="h-items">${esc(items)} <span style="color:#94a3b8;">（${cnt} 件）</span></div>
+        <div class="h-time">${o.timeStr}${stall}</div>
+        <div class="h-btns">
+          <button class="small secondary" data-preview="${idx}">👁 预览</button>
+          <button class="small secondary" data-reprint="${idx}">🖨 重打</button>
+        </div>
+      </div>`;
+    }).join('');
+    $('historyList').querySelectorAll('[data-preview]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const idx = +b.getAttribute('data-preview');
+        const o = history[idx];
+        if(o) showReceiptPreview(o);
+      });
+    });
+    $('historyList').querySelectorAll('[data-reprint]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const idx = +b.getAttribute('data-reprint');
+        const o = history[idx];
+        if(!o) return;
+        if(!btConnected) return toast('请先在后台连接小票机');
+        printReceipt(o);
+      });
+    });
+  }
+
+  $('clearHistoryBtn').addEventListener('click', ()=>{
+    if(!history.length) return toast('暂无历史');
+    if(!confirm('确定清空所有订单历史？不可恢复。')) return;
+    history = [];
+    saveHis(); renderOrders();
+    toast('已清空');
+  });
+
+  $('catStatBtn').addEventListener('click', ()=>{
+    const d = $('statsDate').value || todayKey();
+    const dayOrders = history.filter(o=>o.dateKey===d);
+    const dayMap = {}, allMap = {};
+    dayOrders.forEach(o=>o.items.forEach(i=>{
+      const c = (i.cat||'').trim() || '未分类';
+      if(!dayMap[c]) dayMap[c] = {q:0,a:0};
+      dayMap[c].q += (i.isGift?0:i.qty);
+      dayMap[c].a += i.price*i.qty;
+    }));
+    history.forEach(o=>o.items.forEach(i=>{
+      const c = (i.cat||'').trim() || '未分类';
+      if(!allMap[c]) allMap[c] = {q:0,a:0};
+      allMap[c].q += (i.isGift?0:i.qty);
+      allMap[c].a += i.price*i.qty;
+    }));
+    const table = (map)=>{
+      const keys = Object.keys(map).sort((a,b)=>map[b].a-map[a].a);
+      if(!keys.length) return '<div class="empty" style="padding:12px;">无数据</div>';
+      return `<table style="width:100%; border-collapse:collapse; font-size:0.86rem;">
+        <tr style="background:#f8fafc;"><th style="text-align:left;padding:8px;">类型</th><th style="padding:8px;">件数</th><th style="padding:8px;text-align:right;">营业额</th></tr>
+        ${keys.map(k=>`<tr style="border-top:1px solid #f1f5f9;"><td style="padding:8px;">${esc(k)}</td><td style="text-align:center;padding:8px;">${map[k].q}</td><td style="text-align:right;padding:8px;color:#059669;font-weight:600;">${money(map[k].a)}</td></tr>`).join('')}
+      </table>`;
+    };
+    const dayTotal = dayOrders.reduce((s,o)=>s+o.total,0);
+    const allTotal = history.reduce((s,o)=>s+o.total,0);
+    const m = openModal(`
+      <h3>📊 类型统计</h3>
+      <div style="margin-bottom:14px;">
+        <div style="font-weight:600;margin-bottom:6px;">${d} 当日</div>
+        ${table(dayMap)}
+        <div style="text-align:right;font-weight:700;color:#059669;margin-top:8px;">当日合计：${money(dayTotal)}</div>
+      </div>
+      <div>
+        <div style="font-weight:600;margin-bottom:6px;">全部历史</div>
+        ${table(allMap)}
+        <div style="text-align:right;font-weight:700;color:#059669;margin-top:8px;">历史合计：${money(allTotal)}</div>
+      </div>
+      <div class="m-actions"><button class="secondary" id="csClose">关闭</button></div>
+    `);
+    $('csClose').addEventListener('click', m.close);
+  });
+
+  // ========== 后台 ==========
+  function renderAdmin(){
+    if(!$('adminExportDate').value) $('adminExportDate').value = todayKey();
+    $('rShopName').value = receiptCfg.shopName || '';
+    $('rTitle').value = receiptCfg.title || '';
+    $('rStallNo').value = receiptCfg.stallNo || '';
+    $('rStallName').value = receiptCfg.stallName || '';
+    $('rFooter').value = receiptCfg.footer || '';
+    $('rWidth').value = receiptCfg.width || '48';
+    $('rExtra').value = receiptCfg.extra || '';
+    $('rFeedLines').value = receiptCfg.feedLines || 0;
+    $('rFeedVal').textContent = receiptCfg.feedLines || 0;
+    $('logoEnable').checked = !!receiptCfg.logoEnable;
+    $('logoWidth').value = receiptCfg.logoWidth || 120;
+    $('logoBottomEnable').checked = !!receiptCfg.logoBottomEnable;
+    $('logoBottomWidth').value = receiptCfg.logoBottomWidth || 120;
+    $('titleBold').checked = !!receiptCfg.titleBold;
+    $('qrEnable').checked = !!receiptCfg.qrEnable;
+    $('qrSize').value = receiptCfg.qrSize || 140;
+    $('rFont').value = receiptCfg.fontFamily || "'SF Mono', Consolas, monospace";
+
+    setFormatToggle('titleAlign', receiptCfg.titleAlign || 'center');
+    setFormatToggle('titleSize', String(receiptCfg.titleSize || 2));
+    setFormatToggle('bodySize', String(receiptCfg.bodySize || 1));
+    setFormatToggle('dividerStyle', receiptCfg.dividerStyle || 'dash');
+
+    $('brandTextInput').value = brandCfg.text || '';
+    $('printIconSize').value = brandCfg.printIconSize || 24;
+    $('printIconSizeVal').textContent = brandCfg.printIconSize || 24;
+    $('exportIconSize').value = brandCfg.exportIconSize || 24;
+    $('exportIconSizeVal').textContent = brandCfg.exportIconSize || 24;
+
+    if(brandCfg.bg){
+      $('brandBgBox').innerHTML = `<img src="${brandCfg.bg}"><input type="file" accept="image/*" id="brandBgInput" style="display:none;">`;
+    } else {
+      $('brandBgBox').innerHTML = `<span id="brandBgHint">点击上传背景图</span><input type="file" accept="image/*" id="brandBgInput" style="display:none;">`;
+    }
+    bindBrandBgInput();
+
+    $('printIconBox').innerHTML = brandCfg.printIcon
+      ? `<img src="${brandCfg.printIcon}"><input type="file" accept="image/*" id="printIconInput" style="display:none;">`
+      : `<span id="printIconPreview">🖨</span><input type="file" accept="image/*" id="printIconInput" style="display:none;">`;
+    bindIconInputs('print');
+
+    $('exportIconBox').innerHTML = brandCfg.exportIcon
+      ? `<img src="${brandCfg.exportIcon}"><input type="file" accept="image/*" id="exportIconInput" style="display:none;">`
+      : `<span id="exportIconPreview">📥</span><input type="file" accept="image/*" id="exportIconInput" style="display:none;">`;
+    bindIconInputs('export');
+
+    if(receiptCfg.logo){
+      $('logoPreviewBox').innerHTML = `<img src="${receiptCfg.logo}"><input type="file" accept="image/*" id="logoInput" style="display:none;">`;
+    } else {
+      $('logoPreviewBox').innerHTML = `<span>点击<br>上传</span><input type="file" accept="image/*" id="logoInput" style="display:none;">`;
+    }
+    bindLogoInput();
+
+    if(receiptCfg.logoBottom){
+      $('logoBottomPreviewBox').innerHTML = `<img src="${receiptCfg.logoBottom}"><input type="file" accept="image/*" id="logoBottomInput" style="display:none;">`;
+    } else {
+      $('logoBottomPreviewBox').innerHTML = `<span>点击<br>上传</span><input type="file" accept="image/*" id="logoBottomInput" style="display:none;">`;
+    }
+    bindLogoBottomInput();
+
+    updateBtStatus();
+    updateReceiptPreview();
+    renderGiftRules();
+    renderHeldOrders();
+  }
+
+  function setFormatToggle(group, val){
+    const g = document.querySelector(`.format-toggle[data-group="${group}"]`);
+    if(!g) return;
+    g.querySelectorAll('button').forEach(b=>{
+      b.classList.toggle('active', b.getAttribute('data-val') === val);
+    });
+  }
+  function getFormatToggle(group){
+    const g = document.querySelector(`.format-toggle[data-group="${group}"]`);
+    if(!g) return null;
+    const a = g.querySelector('button.active');
+    return a ? a.getAttribute('data-val') : null;
+  }
+
+  function bindLogoInput(){
+    const li = $('logoInput');
+    if(!li) return;
+    li.addEventListener('change', e=>{
+      const f = e.target.files[0]; if(!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        receiptCfg.logo = ev.target.result;
+        receiptCfg.logoEnable = true;
+        $('logoEnable').checked = true;
+        $('logoPreviewBox').innerHTML = `<img src="${receiptCfg.logo}"><input type="file" accept="image/*" id="logoInput" style="display:none;">`;
+        bindLogoInput();
+        updateReceiptPreview();
+      };
+      r.readAsDataURL(f);
+    });
+  }
+  $('logoPreviewBox').addEventListener('click', ()=>{ const li = $('logoInput'); if(li) li.click(); });
+  bindLogoInput();
+
+  $('removeLogoBtn').addEventListener('click', ()=>{
+    receiptCfg.logo = null;
+    receiptCfg.logoEnable = false;
+    $('logoEnable').checked = false;
+    $('logoPreviewBox').innerHTML = `<span>点击<br>上传</span><input type="file" accept="image/*" id="logoInput" style="display:none;">`;
+    bindLogoInput();
+    updateReceiptPreview();
+    toast('已移除图片');
+  });
+
+  function bindLogoBottomInput(){
+    const li = $('logoBottomInput');
+    if(!li) return;
+    li.addEventListener('change', e=>{
+      const f = e.target.files[0]; if(!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        receiptCfg.logoBottom = ev.target.result;
+        receiptCfg.logoBottomEnable = true;
+        $('logoBottomEnable').checked = true;
+        $('logoBottomPreviewBox').innerHTML = `<img src="${receiptCfg.logoBottom}"><input type="file" accept="image/*" id="logoBottomInput" style="display:none;">`;
+        bindLogoBottomInput();
+        updateReceiptPreview();
+      };
+      r.readAsDataURL(f);
+    });
+  }
+  $('logoBottomPreviewBox').addEventListener('click', ()=>{ const li = $('logoBottomInput'); if(li) li.click(); });
+  bindLogoBottomInput();
+
+  $('removeLogoBottomBtn').addEventListener('click', ()=>{
+    receiptCfg.logoBottom = null;
+    receiptCfg.logoBottomEnable = false;
+    $('logoBottomEnable').checked = false;
+    $('logoBottomPreviewBox').innerHTML = `<span>点击<br>上传</span><input type="file" accept="image/*" id="logoBottomInput" style="display:none;">`;
+    bindLogoBottomInput();
+    updateReceiptPreview();
+    toast('已移除图片');
+  });
+
+  $('qrEnable').addEventListener('change', ()=>updateReceiptPreview());
+  $('qrSize').addEventListener('change', ()=>updateReceiptPreview());
+  $('rFont').addEventListener('change', ()=>updateReceiptPreview());
+
+  function bindBrandBgInput(){
+    const bi = $('brandBgInput');
+    if(!bi) return;
+    bi.addEventListener('change', e=>{
+      const f = e.target.files[0]; if(!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        openCropModal(ev.target.result, (croppedBase64)=>{
+          brandCfg.bg = croppedBase64;
+          $('brandBgBox').innerHTML = `<img src="${brandCfg.bg}"><input type="file" accept="image/*" id="brandBgInput" style="display:none;">`;
+          bindBrandBgInput();
+          toast('已裁剪，点"保存"生效');
+        });
+      };
+      r.readAsDataURL(f);
+      e.target.value = '';
+    });
+  }
+  $('brandBgBox').addEventListener('click', ()=>{ const bi = $('brandBgInput'); if(bi) bi.click(); });
+  bindBrandBgInput();
+
+  function bindIconInputs(which){
+    const inputId = which === 'print' ? 'printIconInput' : 'exportIconInput';
+    const li = $(inputId);
+    if(!li) return;
+    li.addEventListener('change', e=>{
+      const f = e.target.files[0]; if(!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        if(which === 'print') brandCfg.printIcon = ev.target.result;
+        else brandCfg.exportIcon = ev.target.result;
+        const box = which === 'print' ? $('printIconBox') : $('exportIconBox');
+        box.innerHTML = `<img src="${ev.target.result}"><input type="file" accept="image/*" id="${inputId}" style="display:none;">`;
+        bindIconInputs(which);
+      };
+      r.readAsDataURL(f);
+      e.target.value = '';
+    });
+  }
+  $('printIconBox').addEventListener('click', ()=>{ const i = $('printIconInput'); if(i) i.click(); });
+  $('exportIconBox').addEventListener('click', ()=>{ const i = $('exportIconInput'); if(i) i.click(); });
+  bindIconInputs('print');
+  bindIconInputs('export');
+
+  $('printIconSize').addEventListener('input', ()=>{
+    $('printIconSizeVal').textContent = $('printIconSize').value;
+  });
+  $('exportIconSize').addEventListener('input', ()=>{
+    $('exportIconSizeVal').textContent = $('exportIconSize').value;
+  });
+
+  $('removePrintIconBtn').addEventListener('click', ()=>{
+    brandCfg.printIcon = null;
+    $('printIconBox').innerHTML = `<span id="printIconPreview">🖨</span><input type="file" accept="image/*" id="printIconInput" style="display:none;">`;
+    bindIconInputs('print');
+    toast('已移除（需点保存生效）');
+  });
+  $('removeExportIconBtn').addEventListener('click', ()=>{
+    brandCfg.exportIcon = null;
+    $('exportIconBox').innerHTML = `<span id="exportIconPreview">📥</span><input type="file" accept="image/*" id="exportIconInput" style="display:none;">`;
+    bindIconInputs('export');
+    toast('已移除（需点保存生效）');
+  });
+
+  $('saveBrandBtn').addEventListener('click', ()=>{
+    brandCfg.text = $('brandTextInput').value.trim() || '';
+    brandCfg.printIconSize = parseInt($('printIconSize').value, 10) || 24;
+    brandCfg.exportIconSize = parseInt($('exportIconSize').value, 10) || 24;
+    saveBrand();
+    applyBrand();
+    toast('顶栏已保存');
+  });
+
+  $('removeBrandBgBtn').addEventListener('click', ()=>{
+    brandCfg.bg = null;
+    $('brandBgBox').innerHTML = `<span id="brandBgHint">点击上传背景图</span><input type="file" accept="image/*" id="brandBgInput" style="display:none;">`;
+    bindBrandBgInput();
+    toast('已移除背景图（需点保存生效）');
+  });
+
+  // 图片裁剪
+  function openCropModal(imageSrc, onDone){
+    const ov = document.createElement('div');
+    ov.className = 'crop-overlay';
+    ov.innerHTML = `
+      <div class="crop-title">✂️ 裁剪顶栏背景图</div>
+      <div class="crop-ratio-row" id="cropRatioRow">
+        <button data-r="10:1" class="active">超宽 10:1（推荐）</button>
+        <button data-r="8:1">宽 8:1</button>
+        <button data-r="6:1">标准 6:1</button>
+        <button data-r="4:1">偏方 4:1</button>
+        <button data-r="free">自由</button>
+      </div>
+      <div class="crop-stage" id="cropStage">
+        <canvas id="cropCanvas"></canvas>
+        <div class="crop-box" id="cropBox">
+          <div class="crop-corner tl" data-c="tl"></div>
+          <div class="crop-corner tr" data-c="tr"></div>
+          <div class="crop-corner bl" data-c="bl"></div>
+          <div class="crop-corner br" data-c="br"></div>
+          <div class="crop-move" data-c="move"></div>
+        </div>
+      </div>
+      <div class="crop-preview-row">
+        <span>顶栏预览：</span>
+        <div class="crop-preview-thumb" id="cropPreviewThumb"></div>
+      </div>
+      <div class="crop-hint" id="cropSizeInfo">裁剪尺寸：—</div>
+      <div class="crop-hint">拖动裁剪框调整位置，拖四角缩放。或点下方"自动居中裁剪"。</div>
+      <div class="crop-toolbar">
+        <button class="secondary" id="cropReset">重置</button>
+        <button class="secondary" id="cropAuto">自动居中</button>
+        <button class="secondary" id="cropCancel">取消</button>
+        <button class="green" id="cropConfirm">✓ 完成</button>
+      </div>
+    `;
+    document.body.appendChild(ov);
+
+    const canvas = ov.querySelector('#cropCanvas');
+    const cropBox = ov.querySelector('#cropBox');
+    const previewThumb = ov.querySelector('#cropPreviewThumb');
+    const sizeInfo = ov.querySelector('#cropSizeInfo');
+    const ctx = canvas.getContext('2d');
+
+    const img = new Image();
+    let imgW = 0, imgH = 0;
+    let scale = 1;
+    let ratio = 10 / 1;
+    let crop = { x: 0, y: 0, w: 0, h: 0 };
+    let dragMode = null;
+    let dragStart = { x: 0, y: 0, crop: null };
+
+    img.onload = () => {
+      imgW = img.naturalWidth;
+      imgH = img.naturalHeight;
+      const maxCanvasW = Math.min(600, window.innerWidth - 40);
+      const displayW = Math.min(maxCanvasW, imgW);
+      const displayH = Math.round(imgH * (displayW / imgW));
+      scale = displayW / imgW;
+      canvas.width = displayW;
+      canvas.height = displayH;
+      canvas.style.width = displayW + 'px';
+      canvas.style.height = displayH + 'px';
+      ctx.drawImage(img, 0, 0, displayW, displayH);
+      autoCrop();
+    };
+    img.src = imageSrc;
+
+    function autoCrop(){
+      let w = imgW;
+      let h = Math.round(w / ratio);
+      if(h > imgH){
+        h = imgH;
+        w = Math.round(h * ratio);
+      }
+      crop.x = Math.round((imgW - w) / 2);
+      crop.y = Math.round((imgH - h) / 2);
+      crop.w = w;
+      crop.h = h;
+      updateCropBox();
+    }
+
+    function updateCropBox(){
+      const left = crop.x * scale;
+      const top = crop.y * scale;
+      const w = crop.w * scale;
+      const h = crop.h * scale;
+      cropBox.style.left = left + 'px';
+      cropBox.style.top = top + 'px';
+      cropBox.style.width = w + 'px';
+      cropBox.style.height = h + 'px';
+      updatePreviewThumb();
+      if(sizeInfo) sizeInfo.textContent = `裁剪尺寸：${crop.w} × ${crop.h} px（原图 ${imgW} × ${imgH}）`;
+    }
+
+    function updatePreviewThumb(){
+      try {
+        const tmpCanvas = document.createElement('canvas');
+        const pw = 320;
+        const ph = Math.max(1, Math.round(pw / ratio));
+        tmpCanvas.width = pw;
+        tmpCanvas.height = ph;
+        const tctx = tmpCanvas.getContext('2d');
+        tctx.drawImage(img, crop.x, crop.y, crop.w, crop.h, 0, 0, pw, ph);
+        previewThumb.style.backgroundImage = `url(${tmpCanvas.toDataURL()})`;
+      } catch(e){}
+    }
+
+    function getPoint(e){
+      if(e.touches && e.touches.length){
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      return { x: e.clientX, y: e.clientY };
+    }
+
+    function onDown(e){
+      const target = e.target;
+      const mode = target.getAttribute('data-c');
+      if(!mode) return;
+      e.preventDefault();
+      dragMode = mode;
+      const p = getPoint(e);
+      dragStart.x = p.x;
+      dragStart.y = p.y;
+      dragStart.crop = { ...crop };
+    }
+
+    function onMove(e){
+      if(!dragMode) return;
+      e.preventDefault();
+      const p = getPoint(e);
+      const dx = (p.x - dragStart.x) / scale;
+      const dy = (p.y - dragStart.y) / scale;
+      const c0 = dragStart.crop;
+
+      if(dragMode === 'move'){
+        let nx = c0.x + dx;
+        let ny = c0.y + dy;
+        nx = Math.max(0, Math.min(imgW - c0.w, nx));
+        ny = Math.max(0, Math.min(imgH - c0.h, ny));
+        crop.x = Math.round(nx);
+        crop.y = Math.round(ny);
+      } else {
+        let w = c0.w, h = c0.h, x = c0.x, y = c0.y;
+        if(dragMode === 'br'){ w = c0.w + dx; h = w / ratio; }
+        else if(dragMode === 'bl'){ w = c0.w - dx; h = w / ratio; x = c0.x + (c0.w - w); }
+        else if(dragMode === 'tr'){ w = c0.w + dx; h = w / ratio; y = c0.y + (c0.h - h); }
+        else if(dragMode === 'tl'){ w = c0.w - dx; h = w / ratio; x = c0.x + (c0.w - w); y = c0.y + (c0.h - h); }
+        const minW = 40;
+        if(w < minW){
+          w = minW; h = w / ratio;
+          if(dragMode === 'bl' || dragMode === 'tl') x = c0.x + (c0.w - w);
+          if(dragMode === 'tr' || dragMode === 'tl') y = c0.y + (c0.h - h);
+        }
+        if(x < 0){ w += x; x = 0; h = w / ratio; if(dragMode === 'tr' || dragMode === 'tl') y = c0.y + (c0.h - h); }
+        if(y < 0){ h += y; y = 0; w = h * ratio; if(dragMode === 'bl' || dragMode === 'tl') x = c0.x + (c0.w - w); }
+        if(x + w > imgW){ w = imgW - x; h = w / ratio; if(dragMode === 'tr' || dragMode === 'tl') y = c0.y + (c0.h - h); }
+        if(y + h > imgH){ h = imgH - y; w = h * ratio; if(dragMode === 'bl' || dragMode === 'tl') x = c0.x + (c0.w - w); }
+        crop.x = Math.round(x); crop.y = Math.round(y); crop.w = Math.round(w); crop.h = Math.round(h);
+      }
+      updateCropBox();
+    }
+
+    function onUp(){ dragMode = null; }
+
+    cropBox.addEventListener('mousedown', onDown);
+    cropBox.addEventListener('touchstart', onDown, {passive:false});
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchend', onUp);
+
+    function cleanup(){
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchend', onUp);
+    }
+
+    ov.querySelectorAll('#cropRatioRow button').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        ov.querySelectorAll('#cropRatioRow button').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        const r = b.getAttribute('data-r');
+        if(r === 'free') ratio = crop.w / crop.h;
+        else { const [rw, rh] = r.split(':').map(Number); ratio = rw / rh; }
+        autoCrop();
+      });
+    });
+
+    ov.querySelector('#cropReset').addEventListener('click', ()=>autoCrop());
+    ov.querySelector('#cropAuto').addEventListener('click', ()=>autoCrop());
+    ov.querySelector('#cropCancel').addEventListener('click', ()=>{ cleanup(); ov.remove(); });
+    ov.querySelector('#cropConfirm').addEventListener('click', ()=>{
+      const MAX_OUT_W = 1600;
+      let outW = crop.w, outH = crop.h;
+      if(outW > MAX_OUT_W){
+        const k = MAX_OUT_W / outW;
+        outW = MAX_OUT_W;
+        outH = Math.round(outH * k);
+      }
+      const tmpCanvas = document.createElement('canvas');
+      tmpCanvas.width = outW; tmpCanvas.height = outH;
+      const tctx = tmpCanvas.getContext('2d');
+      tctx.imageSmoothingQuality = 'high';
+      tctx.drawImage(img, crop.x, crop.y, crop.w, crop.h, 0, 0, outW, outH);
+      let base64;
+      try { base64 = tmpCanvas.toDataURL('image/jpeg', 0.9); }
+      catch(e){ base64 = tmpCanvas.toDataURL(); }
+      cleanup();
+      ov.remove();
+      if(onDone) onDone(base64);
+    });
+  }
+
+  $('logoEnable').addEventListener('change', ()=>updateReceiptPreview());
+  $('logoWidth').addEventListener('change', ()=>updateReceiptPreview());
+  $('logoBottomEnable').addEventListener('change', ()=>updateReceiptPreview());
+  $('logoBottomWidth').addEventListener('change', ()=>updateReceiptPreview());
+  $('titleBold').addEventListener('change', ()=>updateReceiptPreview());
+  $('rFeedLines').addEventListener('input', ()=>{ $('rFeedVal').textContent = $('rFeedLines').value; });
+
+  ['rShopName','rTitle','rFooter','rExtra','rWidth','rStallNo','rStallName'].forEach(id=>{
+    const el = $(id);
+    if(el) el.addEventListener('input', updateReceiptPreview);
+  });
+
+  $('saveReceiptBtn').addEventListener('click', ()=>{
+    receiptCfg.shopName = $('rShopName').value.trim();
+    receiptCfg.title = $('rTitle').value.trim();
+    receiptCfg.stallNo = $('rStallNo').value.trim();
+    receiptCfg.stallName = $('rStallName').value.trim();
+    receiptCfg.footer = $('rFooter').value.trim();
+    receiptCfg.width = $('rWidth').value;
+    receiptCfg.extra = $('rExtra').value;
+    receiptCfg.feedLines = parseInt($('rFeedLines').value, 10) || 0;
+    receiptCfg.logoEnable = $('logoEnable').checked;
+    receiptCfg.logoWidth = parseInt($('logoWidth').value, 10) || 120;
+    receiptCfg.logoBottomEnable = $('logoBottomEnable').checked;
+    receiptCfg.logoBottomWidth = parseInt($('logoBottomWidth').value, 10) || 120;
+    receiptCfg.titleBold = $('titleBold').checked;
+    receiptCfg.qrEnable = $('qrEnable').checked;
+    receiptCfg.qrSize = parseInt($('qrSize').value, 10) || 140;
+    receiptCfg.fontFamily = $('rFont').value;
+    receiptCfg.titleAlign = getFormatToggle('titleAlign') || 'center';
+    receiptCfg.titleSize = parseInt(getFormatToggle('titleSize') || '2', 10);
+    receiptCfg.bodySize = parseInt(getFormatToggle('bodySize') || '1', 10);
+    receiptCfg.dividerStyle = getFormatToggle('dividerStyle') || 'dash';
+    saveReceipt();
+    toast('小票模板已保存');
+    updateReceiptPreview();
+  });
+
+  $('previewReceiptBtn').addEventListener('click', ()=>{
+    const demo = {
+      orderNo: '01',
+      items: [
+        {name: '商品1', price: 12.5, qty: 2, cat: '类型1'},
+        {name: '商品2', price: 25, qty: 1, cat: '类型1'}
+      ],
+      total: 50,
+      timeStr: new Date().toLocaleString('zh-CN'),
+      stallNo: receiptCfg.stallNo || '',
+      stallName: receiptCfg.stallName || ''
+    };
+    showReceiptPreview(demo, true);
+  });
+
+  function getDividerLine(width, style){
+    if(style === 'none') return '';
+    if(style === 'star') return '*'.repeat(width);
+    if(style === 'solid') return '─'.repeat(width);
+    return '-'.repeat(width);
+  }
+
+  function buildOrderQrText(order){
+    const QR_MAX_ITEMS = 8;
+    const lines = [];
+    lines.push('【订单详情】');
+    lines.push('单号：' + (order.orderNo || ''));
+    lines.push('时间：' + (order.timeStr || new Date(order.timestamp || Date.now()).toLocaleString('zh-CN')));
+    const sn = order.stallName || receiptCfg.stallName || '';
+    const sno = order.stallNo || receiptCfg.stallNo || '';
+    if(sn || sno) lines.push('摊位：' + sn + ' ' + sno);
+    lines.push('----------------');
+
+    if(order.items.length <= QR_MAX_ITEMS){
+      order.items.forEach(it=>{
+        const amount = (it.price * it.qty).toFixed(2);
+        const tag = it.isGift ? '[赠]' : '';
+        lines.push(`${tag}${it.name}  ¥${it.price.toFixed(2)} × ${it.qty}  ¥${amount}`);
+        if(it.cat) lines.push(`  [${it.cat}]`);
+      });
+    } else {
+      lines.push(`共 ${order.items.length} 种商品，${order.items.reduce((s,i)=>s+i.qty,0)} 件`);
+      lines.push('（明细见小票正文）');
+    }
+
+    lines.push('----------------');
+    lines.push('合计：¥' + Number(order.total).toFixed(2));
+    lines.push('谢谢惠顾！');
+    return lines.join('\n');
+  }
+
+  function buildReceiptHtml(order, opts){
+    opts = opts || {};
+    const width = parseInt(receiptCfg.width, 10) || 48;
+    const shopName = receiptCfg.shopName || '';
+    const title = receiptCfg.title || '';
+    const stallNo = order.stallNo || receiptCfg.stallNo || '';
+    const stallName = order.stallName || receiptCfg.stallName || '';
+    const footer = receiptCfg.footer || '';
+    const extra = receiptCfg.extra || '';
+    const titleAlign = receiptCfg.titleAlign || 'center';
+    const titleSize = parseInt(receiptCfg.titleSize, 10) || 2;
+    const bodySize = parseInt(receiptCfg.bodySize, 10) || 1;
+    const dividerStyle = receiptCfg.dividerStyle || 'dash';
+    const titleBold = !!receiptCfg.titleBold;
+    const logoEnable = !!receiptCfg.logoEnable;
+    const logo = receiptCfg.logo;
+    const logoWidth = parseInt(receiptCfg.logoWidth, 10) || 120;
+    const logoBottomEnable = !!receiptCfg.logoBottomEnable;
+    const logoBottom = receiptCfg.logoBottom;
+    const logoBottomWidth = parseInt(receiptCfg.logoBottomWidth, 10) || 120;
+    const qrEnable = !!receiptCfg.qrEnable;
+    const qrSize = parseInt(receiptCfg.qrSize, 10) || 140;
+    const fontFamily = receiptCfg.fontFamily || "'SF Mono', Consolas, monospace";
+
+    let html = `<div style="font-family:${fontFamily};">`;
+
+    if(logoEnable && logo){
+      html += `<img class="rp-img" src="${logo}" style="max-width:${Math.min(logoWidth, 200)}px;">`;
+    }
+
+    const alignClass = titleAlign === 'center' ? 'rp-center' : (titleAlign === 'right' ? 'rp-right' : '');
+    const sizeClass = titleSize === 1 ? '' : 'rp-big';
+    const boldClass = titleBold ? 'rp-bold' : '';
+
+    if(shopName) html += `<div class="${alignClass} ${sizeClass} ${boldClass}">${esc(shopName)}</div>`;
+    if(title) html += `<div class="${alignClass} ${boldClass}">${esc(title)}</div>`;
+    const dLine = getDividerLine(width, dividerStyle);
+    if(dLine) html += `<div>${dLine}</div>`;
+
+    html += `<div>单号：${order.orderNo}</div>`;
+    html += `<div>时间：${order.timeStr || new Date().toLocaleString('zh-CN')}</div>`;
+    if(stallName || stallNo){
+      html += `<div>摊位：${esc(stallName)} ${esc(stallNo)}</div>`;
+    }
+    if(dLine) html += `<div>${dLine}</div>`;
+    html += `<div>商品${' '.repeat(Math.max(1, width - 18))}数量      金额</div>`;
+
+    const bodyClass = bodySize === 2 ? 'rp-big' : '';
+    order.items.forEach(it=>{
+      const amount = (it.price * it.qty).toFixed(2);
+      const nameMax = Math.max(6, width - 18);
+      let nm = (it.isGift ? '🎁' : '') + it.name;
+      if(nm.length > nameMax) nm = nm.substring(0, nameMax - 1) + '…';
+      const namePart = nm.padEnd(nameMax, ' ');
+      const qtyPart = ('x' + it.qty).padStart(6, ' ');
+      const amtPart = (it.isGift ? '赠品' : amount).padStart(10, ' ');
+      html += `<div class="${bodyClass}">${esc(namePart + qtyPart + amtPart)}</div>`;
+      if(it.cat) html += `<div>  [${esc(it.cat)}]</div>`;
+    });
+
+    if(dLine) html += `<div>${dLine}</div>`;
+    html += `<div class="rp-right rp-bold rp-big">合计：${order.total.toFixed(2)} 元</div>`;
+    if(dLine) html += `<div>${dLine}</div>`;
+
+    if(extra && extra.trim()){
+      extra.split('\n').forEach(l=>{
+        html += `<div>${esc(l)}</div>`;
+      });
+    }
+    if(footer) html += `<div class="rp-center">${esc(footer)}</div>`;
+
+    if(logoBottomEnable && logoBottom){
+      html += `<img class="rp-img" src="${logoBottom}" style="max-width:${Math.min(logoBottomWidth, 200)}px; margin-top:8px;">`;
+    }
+
+    if(qrEnable){
+      const qrContent = buildOrderQrText(order);
+      const qrImg = opts.qrPreviewUrl || makeQrPreviewDataUrl(qrContent);
+      html += `<div style="text-align:center; margin-top:8px;"><img class="rp-qr" src="${qrImg}" style="max-width:${qrSize}px; width:${qrSize}px;"></div>`;
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  function makeQrPreviewDataUrl(text){
+    try {
+      const matrix = qrcode.create(text, 'M');
+      const n = matrix.length;
+      const scale = Math.max(2, Math.floor(300 / n));
+      const padding = 4;
+      const size = (n + padding*2) * scale;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = '#000';
+      for(let y=0;y<n;y++){
+        for(let x=0;x<n;x++){
+          if(matrix[y][x]){
+            ctx.fillRect((x+padding)*scale, (y+padding)*scale, scale, scale);
+          }
+        }
+      }
+      return canvas.toDataURL();
+    } catch(e){
+      console.warn('二维码预览失败', e);
+      return '';
+    }
+  }
+
+  function updateReceiptPreview(){
+    const preview = $('receiptPreview');
+    if(!preview) return;
+    const demo = {
+      orderNo: '01',
+      items: [
+        {name: '商品1', price: 12.5, qty: 2, cat: '类型1'},
+        {name: '商品2', price: 25, qty: 1, cat: '类型1'}
+      ],
+      total: 50,
+      timeStr: new Date().toLocaleString('zh-CN'),
+      stallNo: $('rStallNo') ? $('rStallNo').value : '',
+      stallName: $('rStallName') ? $('rStallName').value : ''
+    };
+    preview.innerHTML = buildReceiptHtml(demo);
+  }
+
+  function showReceiptPreview(order, fromEditor){
+    let cfg = receiptCfg;
+    if(fromEditor){
+      cfg = {
+        ...receiptCfg,
+        shopName: $('rShopName').value.trim(),
+        title: $('rTitle').value.trim(),
+        stallNo: $('rStallNo').value.trim(),
+        stallName: $('rStallName').value.trim(),
+        footer: $('rFooter').value.trim(),
+        width: $('rWidth').value,
+        extra: $('rExtra').value,
+        feedLines: parseInt($('rFeedLines').value, 10) || 0,
+        logoEnable: $('logoEnable').checked,
+        logoWidth: parseInt($('logoWidth').value, 10) || 120,
+        logoBottomEnable: $('logoBottomEnable').checked,
+        logoBottomWidth: parseInt($('logoBottomWidth').value, 10) || 120,
+        titleBold: $('titleBold').checked,
+        qrEnable: $('qrEnable').checked,
+        qrSize: parseInt($('qrSize').value, 10) || 140,
+        fontFamily: $('rFont').value,
+        titleAlign: getFormatToggle('titleAlign') || 'center',
+        titleSize: parseInt(getFormatToggle('titleSize') || '2', 10),
+        bodySize: parseInt(getFormatToggle('bodySize') || '1', 10),
+        dividerStyle: getFormatToggle('dividerStyle') || 'dash'
+      };
+    }
+    const orig = receiptCfg;
+    receiptCfg = cfg;
+    const html = buildReceiptHtml(order);
+    const qrText = buildOrderQrText(order);
+    receiptCfg = orig;
+
+    const m = openModal(`
+      <div style="max-width:560px;">
+        <h3>👁 小票预览</h3>
+        <div class="receipt-paper">
+          <div class="receipt-modal-preview">${html}</div>
+        </div>
+        <div style="margin-top:14px;">
+          <div class="format-label">📱 二维码内容（扫一扫看到这些）</div>
+          <textarea readonly style="font-family:monospace; font-size:0.78rem; line-height:1.6; min-height:120px; background:#f8fafc;">${esc(qrText)}</textarea>
+        </div>
+        <div class="m-actions">
+          <button class="secondary" id="rpClose">关闭</button>
+          <button class="green" id="rpPrint">🖨 打印这张</button>
+        </div>
+      </div>
+    `);
+    $('rpClose').addEventListener('click', m.close);
+    $('rpPrint').addEventListener('click', ()=>{
+      if(!btConnected) return toast('请先在后台连接小票机', 2500);
+      printReceipt(order);
+    });
+  }
+
+  // ========== 蓝牙 ==========
+  function updateBtStatus(){
+    const dot = $('btDot');
+    const txt = $('btStatusText');
+    dot.className = 'bt-dot' + (btConnected ? ' on' : '');
+    txt.textContent = btConnected
+      ? `已连接：${btDevice ? btDevice.name || '未知设备' : ''}`
+      : '未连接';
+  }
+
+  $('btConnectBtn').addEventListener('click', async ()=>{
+    if(!navigator.bluetooth){
+      return toast('当前浏览器不支持蓝牙，请用 Chrome/Edge', 3000);
+    }
+    try {
+      $('btDot').className = 'bt-dot connecting';
+      $('btStatusText').textContent = '连接中…';
+      btDevice = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: [
+          '000018f0-0000-1000-8000-00805f9b34fb',
+          '0000ff00-0000-1000-8000-00805f9b34fb',
+          '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+          'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+          '0000ffe0-0000-1000-8000-00805f9b34fb',
+          '0000fff0-0000-1000-8000-00805f9b34fb',
+          'battery_service'
+        ]
+      });
+      const server = await btDevice.gatt.connect();
+      let writeChar = null;
+      const services = await server.getPrimaryServices();
+      for(const svc of services){
+        try {
+          const chars = await svc.getCharacteristics();
+          for(const c of chars){
+            if(c.properties.write || c.properties.writeWithoutResponse){
+              writeChar = c; break;
+            }
+          }
+        } catch(e){}
+        if(writeChar) break;
+      }
+      if(!writeChar) throw new Error('未找到可写特征');
+      btCharacteristic = writeChar;
+      btConnected = true;
+      updateBtStatus();
+      toast('小票机已连接');
+      btDevice.addEventListener('gattserverdisconnected', ()=>{
+        btConnected = false;
+        btCharacteristic = null;
+        updateBtStatus();
+        toast('小票机已断开');
+      });
+    } catch(e){
+      console.error(e);
+      btConnected = false;
+      updateBtStatus();
+      toast('连接失败：' + (e.message || '未知错误'), 3000);
+    }
+  });
+
+  $('btDisconnectBtn').addEventListener('click', ()=>{
+    try {
+      if(btDevice && btDevice.gatt.connected) btDevice.gatt.disconnect();
+    } catch(e){}
+    btConnected = false;
+    btCharacteristic = null;
+    updateBtStatus();
+    toast('已断开');
+  });
+
+  // ESC/POS
+  const CMD = {
+    INIT: [0x1B, 0x40],
+    ALIGN_LEFT: [0x1B, 0x61, 0x00],
+    ALIGN_CENTER: [0x1B, 0x61, 0x01],
+    ALIGN_RIGHT: [0x1B, 0x61, 0x02],
+    BOLD_ON: [0x1B, 0x45, 0x01],
+    BOLD_OFF: [0x1B, 0x45, 0x00],
+    SIZE_NORMAL: [0x1D, 0x21, 0x00],
+    SIZE_DOUBLE: [0x1D, 0x21, 0x11],
+    SIZE_TRIPLE: [0x1D, 0x21, 0x22],
+    FEED: [0x0A],
+    CUT: [0x1D, 0x56, 0x42, 0x00]
+  };
+
+  function buildReceiptLines(order){
+    const width = parseInt(receiptCfg.width, 10) || 48;
+    const lines = [];
+
+    if(receiptCfg.logoEnable && receiptCfg.logo){
+      lines.push({type:'image', data: receiptCfg.logo, width: receiptCfg.logoWidth || 120});
+    }
+
+    lines.push({
+      text: receiptCfg.shopName || '',
+      align: 'center', bold: true, size: 'double'
+    });
+    if(receiptCfg.title){
+      lines.push({
+        text: receiptCfg.title,
+        align: receiptCfg.titleAlign || 'center',
+        bold: !!receiptCfg.titleBold,
+        size: receiptCfg.titleSize === 3 ? 'triple' : (receiptCfg.titleSize === 2 ? 'double' : 'normal')
+      });
+    }
+    const dLine = getDividerLine(width, receiptCfg.dividerStyle || 'dash');
+    if(dLine) lines.push({text: dLine, align: 'left'});
+
+    lines.push({text: '单号：' + order.orderNo, align: 'left'});
+    lines.push({text: '时间：' + (order.timeStr || new Date(order.timestamp).toLocaleString('zh-CN')), align: 'left'});
+    const sn = order.stallName || receiptCfg.stallName || '';
+    const sno = order.stallNo || receiptCfg.stallNo || '';
+    if(sn || sno) lines.push({text: '摊位：' + sn + ' ' + sno, align: 'left'});
+    if(dLine) lines.push({text: dLine, align: 'left'});
+
+    lines.push({text: '商品          数量      金额', align: 'left'});
+
+    const bodyBig = receiptCfg.bodySize === 2;
+    order.items.forEach(it=>{
+      const amount = (it.price * it.qty).toFixed(2);
+      const nameMax = Math.max(6, width - 18);
+      let nm = (it.isGift ? '[赠]' : '') + it.name;
+      if(nm.length > nameMax) nm = nm.substring(0, nameMax - 1) + '…';
+      const namePart = nm.padEnd(nameMax, ' ');
+      const qtyPart = ('x' + it.qty).padStart(6, ' ');
+      const amtPart = (it.isGift ? '赠品' : amount).padStart(10, ' ');
+      lines.push({
+        text: namePart + qtyPart + amtPart,
+        align: 'left',
+        size: bodyBig ? 'double' : 'normal'
+      });
+      if(it.cat) lines.push({text: '  [' + it.cat + ']', align: 'left'});
+    });
+
+    if(dLine) lines.push({text: dLine, align: 'left'});
+    lines.push({
+      text: '合计：' + order.total.toFixed(2) + ' 元',
+      align: 'right', bold: true, size: 'double'
+    });
+    if(dLine) lines.push({text: dLine, align: 'left'});
+
+    if(receiptCfg.extra && receiptCfg.extra.trim()){
+      receiptCfg.extra.split('\n').forEach(l=>{
+        lines.push({text: l, align: 'left'});
+      });
+    }
+    if(receiptCfg.footer) lines.push({text: receiptCfg.footer, align: 'center'});
+
+    if(receiptCfg.logoBottomEnable && receiptCfg.logoBottom){
+      lines.push({type:'image', data: receiptCfg.logoBottom, width: receiptCfg.logoBottomWidth || 120});
+    }
+
+    if(receiptCfg.qrEnable){
+      const qrText = buildOrderQrText(order);
+      lines.push({type:'qrcode', content: qrText, size: receiptCfg.qrSize || 140, align: 'center'});
+    }
+
+    const feeds = parseInt(receiptCfg.feedLines, 10) || 0;
+    for(let i=0; i<feeds; i++) lines.push({text: '', align: 'left'});
+
+    return lines;
+  }
+
+  function textToBytes(text){
+    return Array.from(new TextEncoder().encode(text));
+  }
+
+  async function imageToEscPosBytes(base64, maxWidth){
+    return new Promise((resolve, reject)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        try {
+          let targetW = Math.min(maxWidth, img.width);
+          targetW = Math.floor(targetW / 8) * 8;
+          if(targetW < 8) targetW = 8;
+          const ratio = targetW / img.width;
+          const targetH = Math.max(1, Math.round(img.height * ratio));
+
+          const canvas = document.createElement('canvas');
+          canvas.width = targetW;
+          canvas.height = targetH;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, targetW, targetH);
+          ctx.drawImage(img, 0, 0, targetW, targetH);
+
+          const imgData = ctx.getImageData(0, 0, targetW, targetH).data;
+          const bytesPerRow = targetW / 8;
+          const imgBytes = [];
+          for(let y = 0; y < targetH; y++){
+            for(let xb = 0; xb < bytesPerRow; xb++){
+              let byte = 0;
+              for(let bit = 0; bit < 8; bit++){
+                const x = xb * 8 + bit;
+                const idx = (y * targetW + x) * 4;
+                const r = imgData[idx], g = imgData[idx+1], b = imgData[idx+2], a = imgData[idx+3];
+                const lum = a < 128 ? 0 : (0.299*r + 0.587*g + 0.114*b);
+                if(lum < 128) byte |= (0x80 >> bit);
+              }
+              imgBytes.push(byte);
+            }
+          }
+          const xL = bytesPerRow & 0xFF, xH = (bytesPerRow >> 8) & 0xFF;
+          const yL = targetH & 0xFF, yH = (targetH >> 8) & 0xFF;
+          const header = [0x1D, 0x76, 0x30, 0x00, xL, xH, yL, yH];
+          resolve(new Uint8Array([...header, ...imgBytes]));
+        } catch(e){ reject(e); }
+      };
+      img.onerror = reject;
+      img.src = base64;
+    });
+  }
+
+  function qrMatrixToEscPos(matrix, moduleSize){
+    moduleSize = moduleSize || 4;
+    const modules = matrix.length;
+    const size = modules * moduleSize;
+    const bytesPerRow = Math.ceil(size / 8);
+    const bytes = [];
+    for(let y=0; y<size; y++){
+      const my = Math.floor(y / moduleSize);
+      for(let xb=0; xb<bytesPerRow; xb++){
+        let byte = 0;
+        for(let bit=0; bit<8; bit++){
+          const x = xb * 8 + bit;
+          if(x >= size){ continue; }
+          const mx = Math.floor(x / moduleSize);
+          if(matrix[my][mx]) byte |= (0x80 >> bit);
+        }
+        bytes.push(byte);
+      }
+    }
+    const xL = bytesPerRow & 0xFF, xH = (bytesPerRow >> 8) & 0xFF;
+    const yL = size & 0xFF, yH = (size >> 8) & 0xFF;
+    return new Uint8Array([0x1D, 0x76, 0x30, 0x00, xL, xH, yL, yH, ...bytes]);
+  }
+
+  async function buildReceiptBytes(order){
+    const lines = buildReceiptLines(order);
+    const parts = [];
+    parts.push(CMD.INIT);
+
+    for(const l of lines){
+      if(l.type === 'image' && l.data){
+        try {
+          const imgBytes = await imageToEscPosBytes(l.data, l.width || 120);
+          parts.push(CMD.ALIGN_CENTER);
+          parts.push(imgBytes);
+          parts.push(CMD.FEED);
+        } catch(e){ console.warn('图片转换失败', e); }
+        continue;
+      }
+      if(l.type === 'qrcode' && l.content){
+        try {
+          const matrix = qrcode.create(l.content, 'M');
+          const printWidth = parseInt(receiptCfg.width, 10) === 32 ? 384 : 576;
+          const moduleSize = Math.max(2, Math.floor(printWidth / (matrix.length + 4)));
+          const qrBytes = qrMatrixToEscPos(matrix, moduleSize);
+          parts.push(CMD.ALIGN_CENTER);
+          parts.push(qrBytes);
+          parts.push(CMD.FEED);
+          parts.push(CMD.FEED);
+        } catch(e){
+          console.warn('二维码生成失败', e);
+          parts.push(CMD.ALIGN_CENTER);
+          parts.push(textToBytes('[二维码内容过长]'));
+          parts.push(CMD.FEED);
+        }
+        continue;
+      }
+      if(l.align === 'center') parts.push(CMD.ALIGN_CENTER);
+      else if(l.align === 'right') parts.push(CMD.ALIGN_RIGHT);
+      else parts.push(CMD.ALIGN_LEFT);
+
+      if(l.bold) parts.push(CMD.BOLD_ON);
+      if(l.size === 'double') parts.push(CMD.SIZE_DOUBLE);
+      else if(l.size === 'triple') parts.push(CMD.SIZE_TRIPLE);
+      else parts.push(CMD.SIZE_NORMAL);
+
+      parts.push(textToBytes(l.text || ''));
+      parts.push(CMD.FEED);
+
+      parts.push(CMD.SIZE_NORMAL);
+      parts.push(CMD.BOLD_OFF);
+    }
+
+    parts.push(CMD.FEED);
+    parts.push(CMD.CUT);
+
+    let total = 0;
+    parts.forEach(p => total += p.length);
+    const out = new Uint8Array(total);
+    let off = 0;
+    parts.forEach(p => {
+      out.set(p instanceof Uint8Array ? p : new Uint8Array(p), off);
+      off += p.length;
+    });
+    return out;
+  }
+
+  async function sendBytesInChunks(bytes, chunkSize){
+    chunkSize = chunkSize || 180;
+    if(!btCharacteristic) throw new Error('未连接');
+    for(let i = 0; i < bytes.length; i += chunkSize){
+      const chunk = bytes.slice(i, i + chunkSize);
+      if(btCharacteristic.properties.writeWithoutResponse){
+        await btCharacteristic.writeValueWithoutResponse(chunk);
+      } else {
+        await btCharacteristic.writeValue(chunk);
+      }
+      await new Promise(r => setTimeout(r, 30));
+    }
+  }
+
+  async function printReceipt(order){
+    if(!btConnected || !btCharacteristic){
+      return toast('请先在后台连接小票机', 2500);
+    }
+    try {
+      toast('正在准备打印…', 1000);
+      const bytes = await buildReceiptBytes(order);
+      await sendBytesInChunks(bytes, 180);
+      toast('🖨 已发送到小票机', 1800);
+    } catch(e){
+      console.error('打印失败', e);
+      toast('打印失败：' + (e.message || ''), 3000);
+    }
+  }
+
+  $('testPrintBtn').addEventListener('click', ()=>{
+    if(!btConnected) return toast('请先连接小票机', 2500);
+    const testOrder = {
+      orderNo: '01',
+      items: [
+        {name: '商品1', price: 12.5, qty: 2, cat: '类型1'},
+        {name: '商品2', price: 8, qty: 1, cat: '类型2', isGift: true}
+      ],
+      total: 25,
+      timeStr: new Date().toLocaleString('zh-CN'),
+      stallNo: receiptCfg.stallNo || 'A-01',
+      stallName: receiptCfg.stallName || '测试摊位'
+    };
+    printReceipt(testOrder);
+  });
+
+  $('quickPrintBtn').addEventListener('click', ()=>{
+    if(!history.length) return toast('暂无订单可打印');
+    if(!btConnected) return toast('请先在后台连接小票机', 2500);
+    printReceipt(history[0]);
+  });
+
+  // 导出
+  function exportCSV(orders, filename){
+    if(!orders.length) return toast('没有订单可导出');
+    const headers = ['订单编号','日期','时间','商品明细','件数','金额','摊位名','摊位号'];
+    const rows = orders.map(o=>{
+      const cnt = o.items.reduce((s,i)=>s+(i.isGift?0:i.qty),0);
+      const detail = o.items.map(i=>`${i.name}${i.cat?'['+i.cat+']':''}${i.isGift?'[赠]':''}×${i.qty}`).join('; ');
+      return [o.orderNo, o.dateKey, o.timeStr, detail, cnt, o.total.toFixed(2), o.stallName||'', o.stallNo||''];
+    });
+    const tAmt = orders.reduce((s,o)=>s+o.total,0);
+    const tItm = orders.reduce((s,o)=>s+o.items.reduce((a,i)=>a+(i.isGift?0:i.qty),0),0);
+    rows.push(['','','','合计', tItm, tAmt.toFixed(2), '', '']);
+    const ec = v=>{ const s=String(v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
+    const csv = '\uFEFF' + [headers, ...rows].map(r=>r.map(ec).join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    toast(`已导出 ${orders.length} 笔`);
+  }
+
+  $('exportDayBtn').addEventListener('click', ()=>{
+    const d = $('adminExportDate').value || todayKey();
+    exportCSV(history.filter(o=>o.dateKey===d), `订单_${d}.csv`);
+  });
+  $('exportAllBtn').addEventListener('click', ()=>{
+    exportCSV(history, `全部订单_${todayKey()}.csv`);
+  });
+  $('exportRangeBtn').addEventListener('click', ()=>{
+    const row = $('rangeRow');
+    row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+  });
+  $('doRangeExport').addEventListener('click', ()=>{
+    const s = $('rangeStart').value, e = $('rangeEnd').value;
+    if(!s || !e) return toast('请选择起止日期');
+    if(s > e) return toast('起始不能晚于结束');
+    exportCSV(history.filter(o=>o.dateKey >= s && o.dateKey <= e), `订单_${s}_至_${e}.csv`);
+  });
+  $('quickExportBtn').addEventListener('click', ()=>{
+    exportCSV(history.filter(o=>o.dateKey===todayKey()), `订单_${todayKey()}.csv`);
+  });
+
+  // 备份/恢复
+  $('backupBtn').addEventListener('click', ()=>{
+    const data = {
+      inventory, history, giftRules, heldOrders, wxQr, alipayQr, orderSeq, notice, categories, receiptCfg, brandCfg,
+      version: 12, exportTime: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `库存系统备份_${todayKey()}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    toast('已备份');
+  });
+
+  $('restoreBtn').addEventListener('click', ()=>{ $('restoreInput').click(); });
+  $('restoreInput').addEventListener('change', e=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if(!data.inventory) throw new Error('格式错误');
+        if(!confirm('恢复会覆盖当前所有数据，确定？')) return;
+        inventory = data.inventory || [];
+        history = data.history || [];
+        giftRules = data.giftRules || [];
+        heldOrders = data.heldOrders || [];
+        wxQr = data.wxQr || null;
+        alipayQr = data.alipayQr || null;
+        orderSeq = data.orderSeq || 0;
+        notice = data.notice || DEFAULT_NOTICE;
+        categories = data.categories || [];
+        receiptCfg = { ...DEFAULT_RECEIPT, ...(data.receiptCfg || {}) };
+        brandCfg = { ...DEFAULT_BRAND, ...(data.brandCfg || {}) };
+        saveInv(); saveHis(); saveQr(); saveSeq(); saveNote(); saveCats(); saveReceipt(); saveBrand(); saveGifts(); saveHeld();
+        applyBrand();
+        renderShop(); renderStock(); renderOrders(); renderAdmin();
+        toast('已恢复');
+      } catch(err){
+        toast('文件格式错误');
+      }
+    };
+    r.readAsText(f);
+    e.target.value = '';
+  });
+
+  // 弹窗
+  function openModal(html){
+    const root = $('modalRoot');
+    const ov = document.createElement('div');
+    ov.className = 'modal-overlay';
+    ov.innerHTML = `<div class="modal">${html}</div>`;
+    ov.addEventListener('click', e=>{ if(e.target === ov) close(); });
+    function close(){ ov.remove(); }
+    root.appendChild(ov);
+    return {close, overlay: ov};
+  }
+
+  // 后台拖动排序
+  function enableAdminDrag(){
+    const container = document.querySelector('#page-admin');
+    if(!container) return;
+    const groups = Array.from(container.querySelectorAll('.admin-group'));
+    let dragEl = null;
+
+    groups.forEach(g=>{
+      const header = g.querySelector('.admin-header');
+      if(!header) return;
+      const handle = header.querySelector('.drag-handle');
+      if(handle) handle.setAttribute('draggable', 'true');
+      header.setAttribute('draggable', 'true');
+
+      header.addEventListener('dragstart', (e)=>{
+        dragEl = g;
+        g.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', g.id); } catch(err){}
+      });
+      header.addEventListener('dragend', ()=>{
+        if(dragEl) dragEl.classList.remove('dragging');
+        document.querySelectorAll('.admin-group').forEach(x=>x.classList.remove('drag-over'));
+        dragEl = null;
+        saveAdminOrder();
+      });
+      g.addEventListener('dragover', (e)=>{
+        e.preventDefault();
+        if(!dragEl || dragEl === g) return;
+        const rect = g.getBoundingClientRect();
+        const after = (e.clientY - rect.top) > rect.height / 2;
+        document.querySelectorAll('.admin-group').forEach(x=>x.classList.remove('drag-over'));
+        g.classList.add('drag-over');
+        if(after) g.parentNode.insertBefore(dragEl, g.nextSibling);
+        else g.parentNode.insertBefore(dragEl, g);
+      });
+      g.addEventListener('dragleave', ()=>{
+        g.classList.remove('drag-over');
+      });
+      g.addEventListener('drop', (e)=>{
+        e.preventDefault();
+        g.classList.remove('drag-over');
+      });
+    });
+  }
+
+  function saveAdminOrder(){
+    const order = Array.from(document.querySelectorAll('#page-admin .admin-group')).map(g=>g.id);
+    localStorage.setItem(K.ADMIN_ORDER, JSON.stringify(order));
+  }
+
+  function restoreAdminOrder(){
+    const raw = localStorage.getItem(K.ADMIN_ORDER);
+    if(!raw) return;
+    try {
+      const order = JSON.parse(raw);
+      const container = document.querySelector('#page-admin');
+      order.forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) container.appendChild(el);
+      });
+    } catch(e){}
+  }
+
+  // 初始化
+  function init(){
+    loadAll();
+    initDemo();
+    applyTheme(localStorage.getItem(K.THEME) || 'blue');
+    applyBrand();
+    restoreAdminOrder();
+    enableAdminDrag();
+    renderShop();
+    renderStock();
+    renderOrders();
+    renderQrBoxes();
+    renderAdmin();
+    renderHeldOrders();
+    updateBottomBar();
+    $('addName').value = nextProductName();
+    $('addCat').value = nextTypeName();
+    const dl = $('catList');
+    dl.innerHTML = allCats().map(c=>`<option value="${esc(c)}">`).join('');
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
